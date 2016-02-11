@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+<div id="content"></div>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script>
+d3.xml("rows.xml", "application.xml", function(xml) {
+	
+	// Get a list of all rows in the xml document.
+	var rows = xml.getElementsByTagName("row");
+	
+	var nameSet = new Set();
+	for (var i = 0; i < rows.length; i++) {
+		nameSet.add(rows[i].getElementsByTagName("nm")[0].innerHTML);
+	}
+	
+	// Loop through rows getting each name element.
+	var uniqueNames = Array.from(nameSet);
+	var items = "";
+	for (var i = 0; i < uniqueNames.length; i++) {
+		items += "<li>" + uniqueNames[i] + "</li>";
+	}
+	
+	var list = "<ol>" + items + "</ol>";
+	
+	// Attach the list to the content div.
+	document.getElementById("content").innerHTML = list;
+	
+	}); // End xml callback.
+	
+</script>
+</body>
+</html>
