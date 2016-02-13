@@ -1,34 +1,80 @@
 <!DOCTYPE html>
-<html>
-<head></head>
+<meta charset="utf-8">
+<style>
+
+text {
+	font: 10px sans-serif;
+}
+
+</style>
 <body>
-<div id="content"></div>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script>
-d3.xml("rows.xml", "application.xml", function(xml) {
+
+	// The size of the SVG graphics element.
+	var diameter = 960;
 	
-	// Get a list of all rows in the xml document.
-	var rows = xml.getElementsByTagName("row");
+	// Sets comma separating for numbers with more than 3 digits.
+	var format = d3.format(",d");
 	
-	var nameSet = new Set();
-	for (var i = 0; i < rows.length; i++) {
-		nameSet.add(rows[i].getElementsByTagName("nm")[0].innerHTML);
+	// Gives a 20 valued color output range.
+	var color = d3.scale.category10();
+	
+	// Creating a default bubble layout.
+	var bubble = d3.layout.pack()
+		.sort(null)
+		.size([diameter, diameter])
+		.padding(1.5);
+		
+	// Adding the SVG element and styling it with attributes.
+	var svg = d3.select("body").append("svg")
+		.attr("width", diameter)
+		.attr("height", diameter)
+		.attr("class", "bubble");
+		
+	d3.json("top_names.json", function(error, root) {
+		if (error) throw error;
+		
+		// Creating all leaf node circles.
+		var node = svg.selectAll(".node")
+				.data(bubble.nodes(classes(root))
+				.filter(function(d) { return !d.children; }))
+			.enter().append("g")
+				.attr("class", "node")
+				.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+				
+		// Adding title to the g element nodes.
+		node.append("title")
+			.text(function(d) { return d.className + ": " + format(d.value); });
+		
+			
+		// Adding circle to the g element nodes.
+		node.append("circle")
+			.attr("r", function(d) { return d.r; })
+			.style("fill", function(d) { return color(d.packageName); });
+			
+		node.append("text")
+			.attr("dy", ".3em")
+			.style("text-anchor", "middle")
+			.style("font-size", "9px")
+			.text(function(d) { return d.className.substring(0, d.r / 4); });
+});
+
+// Returns flattened heirarchy containing all leaf nodes under the root.
+function classes(root) {
+	var classes = [];
+	
+	function recurse(name, node) {
+		if (node.children) node.children.forEach(function(child) { recurse(node.name, child); });
+		else classes.push({packageName: name, className: node.name, value: node.cnt});
 	}
 	
-	// Loop through rows getting each name element.
-	var uniqueNames = Array.from(nameSet);
-	var items = "";
-	for (var i = 0; i < uniqueNames.length; i++) {
-		items += "<li>" + uniqueNames[i] + "</li>";
-	}
+	recurse(null, root);
 	
-	var list = "<ol>" + items + "</ol>";
-	
-	// Attach the list to the content div.
-	document.getElementById("content").innerHTML = list;
-	
-	}); // End xml callback.
-	
+	return { children: classes };
+}
+
+d3.select(self.frameElement).style("height", diameter + "px");
+
 </script>
 </body>
-</html>
