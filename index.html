@@ -8,9 +8,9 @@ text {
 
 </style>
 <body>
+<button id="b">Filter</button>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script>
-
 	// The size of the SVG graphics element.
 	var diameter = 960;
 	
@@ -25,40 +25,53 @@ text {
 		.sort(null)
 		.size([diameter, diameter])
 		.padding(1.5);
-		
+
 	// Adding the SVG element and styling it with attributes.
 	var svg = d3.select("body").append("svg")
 		.attr("width", diameter)
 		.attr("height", diameter)
 		.attr("class", "bubble");
-		
-	d3.json("top_names.json", function(error, root) {
+
+
+function update(min) {
+	d3.json("names.json", function(error, root) {
 		if (error) throw error;
 		
-		// Creating all leaf node circles.
 		var node = svg.selectAll(".node")
-				.data(bubble.nodes(classes(root))
-				.filter(function(d) { return !d.children; }))
-			.enter().append("g")
+			.data(bubble.nodes(classes(root))
+				.filter(function(d) { 
+					return !d.children && d.value > min; }), 
+				function(d) { 
+					return d.packageName + d.className; 
+			});
+			
+		
+		// Creating all leaf node circles.
+		var nodeEnter = node.enter().append("g")
 				.attr("class", "node")
-				.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-				
+				.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });		
+			
+			
 		// Adding title to the g element nodes.
-		node.append("title")
+		nodeEnter.append("title")
 			.text(function(d) { return d.className + ": " + format(d.value); });
 		
 			
 		// Adding circle to the g element nodes.
-		node.append("circle")
+		nodeEnter.append("circle")
 			.attr("r", function(d) { return d.r; })
 			.style("fill", function(d) { return color(d.packageName); });
 			
-		node.append("text")
+		nodeEnter.append("text")
 			.attr("dy", ".3em")
 			.style("text-anchor", "middle")
 			.style("font-size", "9px")
 			.text(function(d) { return d.className.substring(0, d.r / 4); });
-});
+			
+			node.exit().remove();
+	});
+}
+
 
 // Returns flattened heirarchy containing all leaf nodes under the root.
 function classes(root) {
@@ -75,6 +88,12 @@ function classes(root) {
 }
 
 d3.select(self.frameElement).style("height", diameter + "px");
+
+document.getElementById("b").addEventListener("click", function() {
+	update(150);
+});
+
+update(0);
 
 </script>
 </body>
