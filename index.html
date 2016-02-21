@@ -4,12 +4,159 @@
 <body>
 <div id="content"></div>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script src="node_modules/jquery/dist/jquery.js"></script>
+<script src="node_modules/underscore/underscore.js"></script>
 <script>
-d3.xml("rows.xml", "application.xml", function(xml) {
+d3.csv("data_full.csv", function(error, data) {
 	
-	// Get a list of all rows in the xml document.
-	var rows = xml.getElementsByTagName("row");
+	var width = 980;
+	var height = 980;
 	
+	$("#content").css("background-color", "black");
+	
+    var fill = d3.scale.ordinal().range(['#827d92','#827354','#523536','#72856a'])
+
+	
+	var svg = d3.select('#content').append("svg")
+		.attr("width", width)
+		.attr("height", height);
+			
+	for (var j = 0; j < data.length; j++) {
+	
+		if (data[j].RNK > 1) {
+			data.splice(j,1);
+			j--;
+			continue;
+		}
+		else {		
+			// Node radius as a function of its name count.
+			data[j].radius = +data[j].CNT / 6;
+	   
+			// Assigning random positions to allow nodes to fly in at start.
+			data[j].x = Math.random() * width;
+			data[j].y = Math.random() * height;
+		}
+	}
+	
+	var padding = 4;
+	var maxRadius = d3.max(_.pluck(data, 'radius'));
+	
+	var getCenters = function(vname, size) {
+		var centers, map;
+		
+		// uniq - produce a duplicate free version of csv data
+		// pluck - extracts a unique list of values for vname argument.
+		// map - produce an object arrary with name and value
+		centers = _.uniq(_.pluck(data, vname)).map(function (d) {
+			return {name: d, value: 1};
+		});
+		
+		map = d3.layout.pack().size(size);
+		
+		// Giving the map the unique nodes from the vname argument.
+		map.nodes({children: centers});
+		
+		return centers;
+	};
+	
+	var nodes = svg.selectAll("circle").data(data);
+	
+	nodes.enter().append("circle")
+		.attr("class", "node")
+		.attr("cx", function(d) { return d.x; })
+		.attr("cy", function(d) { return d.y; })
+		.attr("r", 2)
+		.style("fill", function (d) { return fill(d.ETHCTY);  });
+	
+	
+	nodes.transition().duration(1000)
+		.attr("r", function(d) { return d.radius; });
+		
+	
+	var force = d3.layout.force();
+	
+		// Page loads with ethnicity button selected.
+	draw('ETHCTY');
+	
+// 	$(".btn").click(function() {
+// 		draw(this.id);
+// 	});
+	
+	function draw (varname) {
+		var centers = getCenters(varname, [width, height]);
+		force.on("tick", tick(centers, varname));
+		labels(centers);
+		force.start();
+	}
+	
+	/*
+	 * Factory type function that returns a function set up by its parameters.
+	 */
+	function tick(centers, varname) {
+		var foci = {}; // Used for quick look-up
+		for (var i = 0; i < centers.length; i++) {
+			foci[centers[i].name] = centers[i];
+		}
+		
+		return function(e) {
+			for (var i = 0; i < data.length; i++) {
+				var o = data[i];
+				var f = foci[o[varname]];
+				o.y += (f.y - o.y) * e.alpha;
+				o.x += (f.x - o.x) * e.alpha;
+			}
+			
+			nodes.each(collide(.11))
+				.attr("cx", function (d) { return d.x; })
+				.attr("cy", function (d) { return d.y; });
+		}
+	};
+	
+	/*
+	 * Passing in the centers array to determine where to place labels.
+	 */
+	function labels (centers) {
+		svg.selectAll(".label").remove();
+		
+		svg.selectAll(".label")
+			.data(centers).enter().append("text")
+			.attr("class", "label")
+			.text(function (d) { return d.name })
+			.attr("fill", "white")
+			.attr("transform", function (d) {
+				return "translate(" + (d.x - ((d.name.length)*3)) + ", " + (d.y - d.r) + ")";
+			});
+	}
+	
+	// Resolves collisions between d and all other circles.
+	// Source: http://bl.ocks.org/mbostock/1748247
+	function collide(alpha) {
+		var quadtree = d3.geom.quadtree(data);
+		return function(d) {
+			var r = d.radius + maxRadius + padding,
+				nx1 = d.x - r,
+				nx2 = d.x + r,
+				ny1 = d.y - r,
+				ny2 = d.y + r;
+			quadtree.visit(function(quad, x1, y1, x2, y2) {
+				if (quad.point && (quad.point !== d)) {
+					var x = d.x - quad.point.x,
+						y = d.y - quad.point.y,
+						l = Math.sqrt(x * x + y * y),
+						r = d.radius + quad.point.radius + padding;
+					if (l < r) {
+						l = (l - r) / l * alpha;
+						d.x -= x *= l;
+						d.y -= y *= l;
+						quad.point.x += x;
+						quad.point.y += y;
+					}
+				}
+				
+				return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+			});
+		}
+	}
 }); // End xml callback.
 	
 </script>
