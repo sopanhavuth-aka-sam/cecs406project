@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+			<title>Step 1 - A Basic Pie Chart</title>
+			<link rel="stylesheet" href="normalize.css">
+	</head>
+		<body>
+			<div id="chart"></div>
+			<script src="http://d3js.org/d3.v3.min.js"></script>
+			<script>
+				(function(d3) {
+					'use strict';
+					
+					//Data set (later on this is imported)
+					var dataset = [
+					{ label: 'Abulia', count: 10 }, 
+					{ label: 'Betelgeuse', count: 20 },
+					{ label: 'Cantaloupe', count: 30 },
+					{ label: 'Dijkstra', count: 40 }
+					];
+
+					//setting variable for width, height, and radius
+					var width = 360;
+					var height = 360;
+					var radius = Math.min(width, height) / 2;
+					var donutWidth = 75; //size of donut
+
+					//setting up color scale to be used in graph(using d3)
+					var color = d3.scale.category20b();
+					
+					//setting up the svg canvas and where the startring point will be(g.transform)
+					var svg = d3.select('#chart')
+					.append('svg')
+					.attr('width', width)
+					.attr('height', height)
+					.append('g')
+					.attr('transform', 'translate(' + (width / 2) + 
+					',' + (height / 2) + ')');
+
+					//setting up the radius of our pie chart
+					var arc = d3.svg.arc()
+					.innerRadius(radius - donutWidth) //for drawing inner circle of donut
+					.outerRadius(radius);//outer circle of donut
+					
+					//setting up the angel of pie chart base on "count" of each section
+					var pie = d3.layout.pie()
+					.value(function(d) { return d.count; })
+					.sort(null);
+					
+					//(The most complicated block of code) drawing the chart using
+					//pie, dataset, arc, and color
+					var path = svg.selectAll('path')
+					.data(pie(dataset))
+					.enter()
+					.append('path')
+					.attr('d', arc)
+					.attr('fill', function(d, i) { 
+					return color(d.data.label);
+					});
+
+				})(window.d3);
+			</script>
+		</body>
+</html>
