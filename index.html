@@ -1,6 +1,44 @@
 <!DOCTYPE html>
 <html>
-<head></head>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title> NYC Baby Names</title>
+	<style>
+		body {
+			margin:40px;
+		}
+		
+		#c1b {
+			position:absolute;
+			top:80px;
+			left:0;
+	
+		}
+		
+		#c1a {
+			position:absolute;
+			top:80px;
+			left:0;
+		}
+		.axis path {
+			fill: none;
+			stroke: #999;
+			stroke-dasharray: 2 3;
+		}
+		
+		circle.tick {
+			fill: #f3f3f3;
+			stroke: #999;
+			stroke-dasharray:2 3;
+		}
+		
+		path.spiral {
+			fill:none;
+			stroke: #ee8d18;
+			stroke-width: 3px;
+		}
+		</style>
+	</head>
 <body>
 <div>
 	<button class="btn" id="all">All</button>
@@ -14,30 +52,82 @@
 <script>
 d3.csv("data_full.csv", function(error, data) {
 	
-	console.log(data);
 	var width = 1200;
 	var height = 1200;
+	var numAxes = 8;
+	var tickAxis = 1;
+	var start = 0;
+	var end = 2;
 	
-	$("#content").css("background-color", "black");
+	var theta = function(r) {
+		return -2*Math.PI*r;
+	}
 	
-//     var fill = d3.scale.ordinal().range(['#827d92','#827354','#523536','#72856a'])
-var fill = d3.scale.category10();
+	var arc = d3.svg.arc()
+		.startAngle(0)
+		.endAngle(2*Math.PI);
+		
+	var radius = d3.scale.linear()
+		.domain([start, end])
+		.range([0, d3.min([width, height])/2 - 20]);
+		
+	var angle = d3.scale.linear()
+		.domain([start, end])
+		.range([0, 360])
+		
+	var xx = width/2;
+	var yy = height/2;
+	
+	var svg = d3.select("#content").append("svg")
+		.attr("width", width)
+		.attr("height", height)
+	.append("g")
+		.attr("transform", "translate(" + xx + "," + yy + ")")
+		.attr("id", "c1a");
+		
+	$("#content").css('background-color', 'black');
+		
+	var pieces = d3.range(start, end+0.001, (end-start) / 1000);
+	
+	var spiral = d3.svg.line.radial()
+		.interpolate("cardinal")
+		.angle(theta)
+		.radius(radius);
+	
+			
+	var ls = svg.selectAll(".spiral")
+		.data([pieces])
+	.enter().append("path")
+		.attr("class", "spiral")
+		.attr("d", spiral);
+// 		.attr("transform", function (d) { return "rotate(" + 90 + ")" });
+		
+	var el = ls.node();
+	var lng = el.getTotalLength();
+	console.log("el " + el);
+	console.log("lng " + lng);
+	var ptt = el.getPointAtLength(lng/2 + lng/3);
+	console.log(ptt);
+	
+	//     var fill = d3.scale.ordinal().range(['#827d92','#827354','#523536','#72856a'])
+	var fill = d3.scale.category10();
 
 	
 	var svg = d3.select('#content').append("svg")
 		.attr("width", width)
-		.attr("height", height);
+		.attr("height", height)
+		.attr("id", "c1b");
 			
 	for (var j = 0; j < data.length; j++) {
 	
-		if (data[j].RNK > 5) {
+		if (data[j].RNK > 1) {
 			data.splice(j,1);
 			j--;
 			continue;
 		}
 		else {		
 			// Node radius as a function of its name count.
-			data[j].radius = +data[j].CNT / 8;
+			data[j].radius = +data[j].CNT / 6;
 			
 			data[j].all = "ALL";
 	   
@@ -70,12 +160,16 @@ var fill = d3.scale.category10();
 	
 	var nodes = svg.selectAll("g").data(data);
 	
+	// hacking
+	
 	var gs = nodes.enter().append("g");
 		
 	var circles = gs.append("circle")
 		.attr("class", "node")
 		.attr("r", 2)
 		.style("fill", function (d) { return fill(d.ETHCTY);  });
+	
+	console.log(gs[0][0]);
 	
 	
 	circles.transition().duration(1000)
@@ -89,10 +183,14 @@ var fill = d3.scale.category10();
 	var force = d3.layout.force();
 	
 		// Page loads with ethnicity button selected.
-	draw('ETHCTY');
+	draw('GNDR');
 	
 	$(".btn").click(function() {
-		draw(this.id);
+// 		draw(this.id);
+			
+// 		setTimeout(function() {
+			gs[0][0].setAttribute("transform", "translate(" + (xx + ptt.x + 40) + "," + (yy + ptt.y - 20	) + ")");
+// 		}, 2000);
 	});
 	
 	function draw (varname) {
