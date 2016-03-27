@@ -14,12 +14,14 @@
 <script>
 d3.csv("data_full.csv", function(error, data) {
 	
+	console.log(data);
 	var width = 1200;
 	var height = 1200;
 	
 	$("#content").css("background-color", "black");
 	
-    var fill = d3.scale.ordinal().range(['#827d92','#827354','#523536','#72856a'])
+//     var fill = d3.scale.ordinal().range(['#827d92','#827354','#523536','#72856a'])
+var fill = d3.scale.category10();
 
 	
 	var svg = d3.select('#content').append("svg")
@@ -28,14 +30,14 @@ d3.csv("data_full.csv", function(error, data) {
 			
 	for (var j = 0; j < data.length; j++) {
 	
-		if (data[j].RNK > 1) {
+		if (data[j].RNK > 5) {
 			data.splice(j,1);
 			j--;
 			continue;
 		}
 		else {		
 			// Node radius as a function of its name count.
-			data[j].radius = +data[j].CNT / 5;
+			data[j].radius = +data[j].CNT / 8;
 			
 			data[j].all = "ALL";
 	   
