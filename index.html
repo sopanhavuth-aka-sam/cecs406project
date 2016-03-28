@@ -171,7 +171,9 @@ d3.csv("data_full.csv", function(error, data) {
 	
 	var gs = nodes.enter().append("g");
 		
-	var circles = gs.append("circle")
+	var gsi = gs.append("g");
+	
+	var circles = gsi.append("circle")
 		.attr("class", "node")
 		.attr("r", 2)
 		.style("fill", function (d) { return fill(d.ETHCTY);  });
@@ -182,7 +184,7 @@ d3.csv("data_full.csv", function(error, data) {
 	circles.transition().duration(1000)
 		.attr("r", function(d) { return d.radius; });
 		
-		gs.append("text")
+		gsi.append("text")
 		.attr("dx", "-30")
 		.attr("fill", "white")
 		.attr("font-size", "9")
@@ -220,11 +222,37 @@ d3.csv("data_full.csv", function(error, data) {
 		var spiralPadding = spiralLength / list.length;
 		for (var i = 0; i < list.length; i++) {
 			var spiralPoint = ls.node().getPointAtLength(i * spiralPadding);
-// 			list[i].style.transition = "none";
-			list[i].style.transform = list[i].getAttribute("transform");
-			console.log(list[i].getAttribute("transform"));
-// 			list[i].style.transition = "all 1s ease";
-		// 	list[i].style.transform = "translate(" + (xx + spiralPoint.x + 40) + "px," + (yy + spiralPoint.y - 20	) + "px)";
+			var g = list[i];
+			var gi = g.getElementsByTagName("g")[0];
+// 			var text = g.getElementsByTagName("text")[0];
+			
+			var transform = g.getAttribute("transform");
+			var matches = transform.match(/\d*\.\d*/g);
+			
+			// g element current translation
+			var x1 = matches[0];
+			var y1 = matches[1];
+			
+			// target translation position relative to svg (0,0)
+			var x2 = xx + spiralPoint.x + 40;
+			var y2 = yy + spiralPoint.y - 20;
+			
+			// calculate the offset from g element's current translation
+			var gidx = x2 - x1;
+			var gidy = y2 - y1;
+			
+			// set circle's current translation to (0,0)
+//  			c.style.transition = "none";			
+//  			c.style.transform = "translate(0px,0px)";
+ 			gi.style.transition = "all 1s ease";
+ 			gi.style.transform = "translate(" + gidx + "px," + gidy + "px)";
+ 			
+//  			var tdx = cdx - circle.getAttribute("r");
+//  			var tdy = cdy - circle.getAttribute("r");
+//  			
+//  			text.style.transition = "all 1s ease";
+//  			text.style.transform = "translate(" + tdx + "px," + tdy + "px)";
+ 			
 		}
 	}
 	
