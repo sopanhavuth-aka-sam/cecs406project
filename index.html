@@ -8,6 +8,15 @@
 			margin:40px;
 		}
 		
+		#content {
+			width:100%;
+			margin:auto;
+		}
+		
+		svg {
+			margin:auto;
+		}
+		
 		#c1b {
 			position:absolute;
 			top:80px;
@@ -26,6 +35,10 @@
 			stroke-dasharray: 2 3;
 		}
 		
+		g, circle {
+			transition: transform 1s ease;
+		}
+		
 		circle.tick {
 			fill: #f3f3f3;
 			stroke: #999;
@@ -34,7 +47,7 @@
 		
 		path.spiral {
 			fill:none;
-			stroke: #ee8d18;
+			stroke: white;
 			stroke-width: 3px;
 		}
 		</style>
@@ -44,6 +57,7 @@
 	<button class="btn" id="all">All</button>
 	<button class="btn" id="ETHCTY">Ethnicity</button>
 	<button class="btn" id="GNDR">Gender</button>
+	<button class="btn" id="SORT">Sort</button>
 </div>
 <div id="content"></div>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
@@ -101,13 +115,6 @@ d3.csv("data_full.csv", function(error, data) {
 		.attr("class", "spiral")
 		.attr("d", spiral);
 // 		.attr("transform", function (d) { return "rotate(" + 90 + ")" });
-		
-	var el = ls.node();
-	var lng = el.getTotalLength();
-	console.log("el " + el);
-	console.log("lng " + lng);
-	var ptt = el.getPointAtLength(lng/2 + lng/3);
-	console.log(ptt);
 	
 	//     var fill = d3.scale.ordinal().range(['#827d92','#827354','#523536','#72856a'])
 	var fill = d3.scale.category10();
@@ -186,11 +193,18 @@ d3.csv("data_full.csv", function(error, data) {
 	draw('GNDR');
 	
 	$(".btn").click(function() {
-// 		draw(this.id);
-			
-// 		setTimeout(function() {
-			gs[0][0].setAttribute("transform", "translate(" + (xx + ptt.x + 40) + "," + (yy + ptt.y - 20	) + ")");
-// 		}, 2000);
+		switch(this.id) {
+			case "all":
+			case "GNDR":
+			case "ETHCTY":
+				draw(this.id);
+				break;
+			case "SORT":
+				sort(gs[0]);
+				break;
+			default:
+				console.log("DEFAULT!");
+			}
 	});
 	
 	function draw (varname) {
@@ -198,6 +212,20 @@ d3.csv("data_full.csv", function(error, data) {
 		force.on("tick", tick(centers, varname));
 		labels(centers);
 		force.start();
+	}
+	
+	function sort(list) {
+	
+		var spiralLength = ls.node().getTotalLength();
+		var spiralPadding = spiralLength / list.length;
+		for (var i = 0; i < list.length; i++) {
+			var spiralPoint = ls.node().getPointAtLength(i * spiralPadding);
+// 			list[i].style.transition = "none";
+			list[i].style.transform = list[i].getAttribute("transform");
+			console.log(list[i].getAttribute("transform"));
+// 			list[i].style.transition = "all 1s ease";
+		// 	list[i].style.transform = "translate(" + (xx + spiralPoint.x + 40) + "px," + (yy + spiralPoint.y - 20	) + "px)";
+		}
 	}
 	
 	/*
