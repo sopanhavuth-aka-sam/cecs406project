@@ -29,6 +29,7 @@
 			top:80px;
 			left:0;
 		}
+		
 		.axis path {
 			fill: none;
 			stroke: #999;
@@ -36,7 +37,7 @@
 		}
 		
 		g, circle {
-			transition: transform 1s ease;
+			transition: transform 500ms ease;
 		}
 		
 		circle.tick {
@@ -47,8 +48,9 @@
 		
 		path.spiral {
 			fill:none;
-			stroke: white;
-			stroke-width: 3px;
+			stroke: black;
+			stroke-width: 2px;
+			opacity:0;
 		}
 		</style>
 	</head>
@@ -66,84 +68,69 @@
 <script>
 d3.csv("data_full.csv", function(error, data) {
 	
-	var width = 1200;
-	var height = 1200;
-	var numAxes = 8;
-	var tickAxis = 1;
-	var start = 0;
-	var end = 2;
+	var CIRCLE_PADDING_FACTOR = 7.0;
 	
-	var theta = function(r) {
-		return -2*Math.PI*r;
-	}
+	var maxCnt = -1;
+	var minCnt = 1000;
+
+	var viewWidth = window.innerWidth;
+	var viewHeight = window.innerHeight;
 	
-	var arc = d3.svg.arc()
-		.startAngle(0)
-		.endAngle(2*Math.PI);
-		
-	var radius = d3.scale.linear()
-		.domain([start, end])
-		.range([0, d3.min([width, height])/2 - 20]);
-		
-	var angle = d3.scale.linear()
-		.domain([start, end])
-		.range([0, 360])
-		
-	var xx = width/2;
-	var yy = height/2;
-	
-	var svg = d3.select("#content").append("svg")
-		.attr("width", width)
-		.attr("height", height)
-	.append("g")
-		.attr("transform", "translate(" + xx + "," + yy + ")")
-		.attr("id", "c1a");
-		
-	$("#content").css('background-color', 'black');
-		
-	var pieces = d3.range(start, end+0.001, (end-start) / 1000);
-	
-	var spiral = d3.svg.line.radial()
-		.interpolate("cardinal")
-		.angle(theta)
-		.radius(radius);
-	
-			
-	var ls = svg.selectAll(".spiral")
-		.data([pieces])
-	.enter().append("path")
-		.attr("class", "spiral")
-		.attr("d", spiral);
-// 		.attr("transform", function (d) { return "rotate(" + 90 + ")" });
+	var MIN_CIRCLE_RADIUS = Math.ceil(viewWidth*viewHeight*0.00002);	
+	var MAX_CIRCLE_RADIUS = Math.floor(viewWidth*viewHeight*0.000045);
+
+	var spiralEnter = drawSpiral();
 	
 	//     var fill = d3.scale.ordinal().range(['#827d92','#827354','#523536','#72856a'])
 	var fill = d3.scale.category10();
 
 	
 	var svg = d3.select('#content').append("svg")
-		.attr("width", width)
-		.attr("height", height)
+		.attr("width", viewWidth)
+		.attr("height", viewHeight)
 		.attr("id", "c1b");
 			
+	
+    data = _.sortBy(data, function(node) { return parseInt(node.RNK) });
+    
+    
+    var capacity = 0;
+    var totalCapacity = (viewWidth * viewHeight) / (Math.pow(MAX_CIRCLE_RADIUS, 2) * CIRCLE_PADDING_FACTOR);
+    
+   
+    console.log("total cap " + totalCapacity);
+	// selecting data
 	for (var j = 0; j < data.length; j++) {
 	
-		if (data[j].RNK > 1) {
+		if (capacity++ < totalCapacity) {
+			data[j].all = "ALL";
+			
+			var cnt = parseInt(data[j].CNT);
+			if (cnt > maxCnt) {
+				maxCnt = cnt;
+			}
+			
+			if (cnt < minCnt) {
+				minCnt = cnt;
+			}
+			
+			// Assigning random positions to allow nodes to fly in at start.
+			data[j].x = Math.random() * viewWidth;
+			data[j].y = Math.random() * viewHeight;
+		}
+		else {		
 			data.splice(j,1);
 			j--;
 			continue;
 		}
-		else {		
-			// Node radius as a function of its name count.
-			data[j].radius = +data[j].CNT / 6;
-			
-			data[j].all = "ALL";
-	   
-			// Assigning random positions to allow nodes to fly in at start.
-			data[j].x = Math.random() * width;
-			data[j].y = Math.random() * height;
-		}
-	}
+	} // end for
 	
+	var circleRadiusScale = d3.scale.linear().domain([minCnt, maxCnt]).range([MIN_CIRCLE_RADIUS, MAX_CIRCLE_RADIUS]);
+	for (var j = 0; j < data.length; j++) {	
+		data[j].radius = circleRadiusScale(data[j].CNT);
+	}	
+	
+		
 	var padding = 4;
 	var maxRadius = d3.max(_.pluck(data, 'radius'));
 	
@@ -167,8 +154,6 @@ d3.csv("data_full.csv", function(error, data) {
 	
 	var nodes = svg.selectAll("g").data(data);
 	
-	// hacking
-	
 	var gs = nodes.enter().append("g");
 		
 	var gsi = gs.append("g");
@@ -177,11 +162,8 @@ d3.csv("data_full.csv", function(error, data) {
 		.attr("class", "node")
 		.attr("r", 2)
 		.style("fill", function (d) { return fill(d.ETHCTY);  });
-	
-	console.log(gs[0][0]);
-	
-	
-	circles.transition().duration(1000)
+
+	circles.transition().duration(500)
 		.attr("r", function(d) { return d.radius; });
 		
 		gsi.append("text")
@@ -192,14 +174,14 @@ d3.csv("data_full.csv", function(error, data) {
 	var force = d3.layout.force();
 	
 		// Page loads with ethnicity button selected.
-	draw('GNDR');
+	draw('GNDR', gs[0]);
 	
 	$(".btn").click(function() {
 		switch(this.id) {
 			case "all":
 			case "GNDR":
 			case "ETHCTY":
-				draw(this.id);
+				draw(this.id, gs[0]);
 				break;
 			case "SORT":
 				sort(gs[0]);
@@ -209,8 +191,68 @@ d3.csv("data_full.csv", function(error, data) {
 			}
 	});
 	
-	function draw (varname) {
-		var centers = getCenters(varname, [width, height]);
+	
+	function drawSpiral() {
+	
+	var numAxes = 8;
+	var tickAxis = 1;
+	var start = 0;
+	var end = 4;
+	
+	var theta = function(r) {
+		return -2*Math.PI*r;
+	}
+	
+	var arc = d3.svg.arc()
+		.startAngle(0)
+		.endAngle(2*Math.PI);
+		
+	var radius = d3.scale.linear()
+		.domain([start, end])
+		.range([0, d3.min([viewWidth, viewHeight])/2 - 20]);
+		
+	var angle = d3.scale.linear()
+		.domain([start, end])
+		.range([0, 360])
+		
+	var halfwide = viewWidth/2;
+	var halftall = viewHeight/2;
+	
+	var svg = d3.select("#content").append("svg")
+		.attr("width", viewWidth)
+		.attr("height", viewHeight)
+		.attr("id", "c1a")
+	.append("g")
+		.attr("transform", "translate(" + halfwide + "," + halftall + ")");
+		
+	var pieces = d3.range(start, end+0.001, (end-start) / 1000);
+	
+	var spiral = d3.svg.line.radial()
+		.interpolate("cardinal")
+		.angle(theta)
+		.radius(radius);
+			
+	var spiralEnter = svg.selectAll(".spiral")
+			.data([pieces])
+		.enter().append("path")
+			.attr("class", "spiral")
+			.attr("d", spiral);
+	// 		.attr("transform", function (d) { return "rotate(" + 90 + ")" });
+	
+	return spiralEnter
+	}
+		
+	function draw(varname, gs) {
+		
+		d3.select(".spiral").style("opacity", "0");
+		// return to parent positioning
+		for (var i = 0; i < gs.length; i++) {
+			var childg = gs[i].getElementsByTagName("g")[0];
+			childg.style.transform = "translate(0px,0px)";
+		}
+			
+		// begin gravity animation
+		var centers = getCenters(varname, [viewWidth, viewHeight]);
 		force.on("tick", tick(centers, varname));
 		labels(centers);
 		force.start();
@@ -218,10 +260,13 @@ d3.csv("data_full.csv", function(error, data) {
 	
 	function sort(list) {
 	
-		var spiralLength = ls.node().getTotalLength();
+		d3.select(".spiral").transition().style("opacity", "1");
+	
+		// ask path for length
+		var spiralLength = spiralEnter.node().getTotalLength();
 		var spiralPadding = spiralLength / list.length;
 		for (var i = 0; i < list.length; i++) {
-			var spiralPoint = ls.node().getPointAtLength(i * spiralPadding);
+			var spiralPoint = spiralEnter.node().getPointAtLength(i * spiralPadding);
 			var g = list[i];
 			var gi = g.getElementsByTagName("g")[0];
 // 			var text = g.getElementsByTagName("text")[0];
@@ -234,25 +279,14 @@ d3.csv("data_full.csv", function(error, data) {
 			var y1 = matches[1];
 			
 			// target translation position relative to svg (0,0)
-			var x2 = xx + spiralPoint.x + 40;
-			var y2 = yy + spiralPoint.y - 20;
+			var x2 = (viewWidth/2) + spiralPoint.x;
+			var y2 = (viewHeight/2) + spiralPoint.y;
 			
 			// calculate the offset from g element's current translation
 			var gidx = x2 - x1;
 			var gidy = y2 - y1;
-			
-			// set circle's current translation to (0,0)
-//  			c.style.transition = "none";			
-//  			c.style.transform = "translate(0px,0px)";
- 			gi.style.transition = "all 1s ease";
+		
  			gi.style.transform = "translate(" + gidx + "px," + gidy + "px)";
- 			
-//  			var tdx = cdx - circle.getAttribute("r");
-//  			var tdy = cdy - circle.getAttribute("r");
-//  			
-//  			text.style.transition = "all 1s ease";
-//  			text.style.transform = "translate(" + tdx + "px," + tdy + "px)";
- 			
 		}
 	}
 	
@@ -273,7 +307,7 @@ d3.csv("data_full.csv", function(error, data) {
 				o.x += (f.x - o.x) * e.alpha;
 			}
 			
-			gs.each(collide(.11))
+			gs.each(collide(.25))
 				.attr("transform", function (d) { return "translate(" + d.x + ", " + d.y + ")"; });
 		}
 	};
@@ -288,7 +322,7 @@ d3.csv("data_full.csv", function(error, data) {
 			.data(centers).enter().append("text")
 			.attr("class", "label")
 			.text(function (d) { return d.name })
-			.attr("fill", "white")
+			.attr("fill", "black")
 			.attr("transform", function (d) {
 				return "translate(" + (d.x - ((d.name.length)*3)) + ", " + (d.y - d.r + 20) + ")";
 			});
