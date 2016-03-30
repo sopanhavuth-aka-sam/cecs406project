@@ -73,7 +73,9 @@ var COLLISION_FACTOR = 0.2;
 var MIN_RADIUS_FACTOR = 0.00002;
 var MAX_RADIUS_FACTOR = 0.00004;
 var STANDARD_FONT_SIZE = 9;
-$(window).resize(function() { 
+
+
+var redraw = function() { 
 	d3.csv("data_full.csv", function(error, data) {
 	
 		reset();
@@ -81,8 +83,12 @@ $(window).resize(function() {
 		init(data, window.innerWidth, window.innerHeight);
 	
 	}); // End xml callback.
-});
-
+}
+	
+	
+$(window).resize(redraw);
+$(document).ready(redraw);
+	
 function reset() {
 	var contentRoot = document.getElementById("content");
 	while (contentRoot.firstChild) {
@@ -120,21 +126,21 @@ function init(data, viewWidth, viewHeight) {
 	var spiralEnter = drawSpiral(data, spiralSVG, viewWidth, viewHeight, scale);
 	
 	$(".btn").click(function() {
-		switch(this.id) {
-			case "all":
-			case "GNDR":
-			case "ETHCTY":
-				draw(this.id, data, gravityEnter[0], gravitySVG, viewWidth, viewHeight);
-				break;
-			case "SORT":
-				sort(gravityEnter[0], spiralEnter);
-				break;
-			default:
-				console.log("DEFAULT!");
-			}
+	switch(this.id) {
+		case "all":
+		case "GNDR":
+		case "ETHCTY":
+			draw(this.id, data, gravityEnter[0], gravitySVG, viewWidth, viewHeight, scale);
+			break;
+		case "SORT":
+			sort(gravityEnter[0], spiralEnter);
+			break;
+		default:
+			console.log("DEFAULT!");
+		}
 	});
 	
-	draw('GNDR', data, gravityEnter[0], gravitySVG, viewWidth, viewHeight);
+	draw('GNDR', data, gravityEnter[0], gravitySVG, viewWidth, viewHeight, scale);
 	
 	/*
 	 * Begin Functions
@@ -223,10 +229,19 @@ function init(data, viewWidth, viewHeight) {
 		var start = 0;
 		var end = 0;
 		if ( scale <= 0.25) {
-			end = 6;
+			end = 5;
+		}
+		else if (scale < 1.0) {
+			end = 4;
+		}
+		else if (scale < 1.75) {
+			end = 3;
+		}
+		else if (scale <= 2.0) {
+			end = 2;
 		}
 		else {
-			end = 4;
+			end = 1;
 		}
 	
 		var theta = function(r) {
@@ -263,7 +278,7 @@ function init(data, viewWidth, viewHeight) {
 	}
 	
 	
-	function draw(varname, data, e, svg, viewWidth, viewHeight) {
+	function draw(varname, data, e, svg, viewWidth, viewHeight, scale) {
 		
 		d3.select(".spiral").style("opacity", "0");
 		
@@ -294,7 +309,7 @@ function init(data, viewWidth, viewHeight) {
 		};
 		var centers = getCenters(varname, [viewWidth, viewHeight]);
 		force.on("tick", tick(data, centers, varname, e));
-		labels(centers, svg);
+		labels(centers, svg, scale);
 		force.start();
 		// end gravity animation
 	}
@@ -350,19 +365,22 @@ function init(data, viewWidth, viewHeight) {
 		}
 	};
 	
-	function labels (centers, gravitySVG) {
+	function labels(centers, gravitySVG, scale) {
 	
 		var gravitySVG = d3.select("#gravitySVG");
 		
 		gravitySVG.selectAll(".label").remove();
+		
+		console.log(gravitySVG);
 		
 		gravitySVG.selectAll(".label")
 			.data(centers).enter().append("text")
 			.attr("class", "label")
 			.text(function (d) { return d.name })
 			.attr("fill", "black")
+			.style("font-size", 30 / scale)
 			.attr("transform", function (d) {
-				return "translate(" + (d.x - ((d.name.length)*3)) + ", " + (d.y - d.r + 20) + ")";
+				return "translate(" + (d.x - ((d.name.length)*3)) + ", " + (d.y - d.r + (50 / scale)) + ")";
 			});
 	}
 	
