@@ -8,9 +8,29 @@
 			margin:40px;
 		}
 		
-		#content {
+		#container {
 			width:100%;
-			margin:auto;
+			float:left;
+			border:1px solid black;
+		}
+		
+		#content {
+			position: absolute;
+			top:80px;
+			left:0px;
+			width:100%;
+			height:100%;
+			border:1px solid blue;
+		}
+		
+		#compare {
+		position:absolute;
+			top:80px;
+			right:0;
+			width:0%;
+			height:100%;
+			background-color: black;
+			border:1px solid red;
 		}
 		
 		svg {
@@ -21,6 +41,7 @@
 			position:absolute;
 			top:80px;
 			left:0;
+			z-index: 1;
 	
 		}
 		
@@ -28,6 +49,7 @@
 			position:absolute;
 			top:80px;
 			left:0;
+			z-index: -1;
 		}
 		
 		.axis path {
@@ -62,7 +84,12 @@
 	<button class="btn" id="SORT">Sort</button>
 	<button class="btn" id="PANOUT">-</button>
 </div>
-<div id="content"></div>
+<div id="container">
+	<div id="content"></div>
+	<div id="compare">
+		<button>BTN</button>
+	</div>
+</div>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script src="node_modules/jquery/dist/jquery.js"></script>
 <script src="node_modules/underscore/underscore.js"></script>
@@ -109,28 +136,33 @@ function init(data, viewWidth, viewHeight) {
 	
 	// gravity setup
 	var gravitySVG = d3.select('#content').append("svg")
-			.attr("width", viewWidth)
-			.attr("height", viewHeight)
+			.attr("width", "100%")
+			.attr("height", "100%")
 			.attr("id", "gravitySVG");
 	
-	var gravityEnter = drawGravity(data, gravitySVG, viewWidth, viewHeight);
+	var gravityRect = gravitySVG.node().getBoundingClientRect();
+	
+	var gravityEnter = drawGravity(data, gravitySVG);
 	
 	// spiral setup
 	var spiralSVG = d3.select("#content").append("svg")
-			.attr("width", viewWidth)
-			.attr("height", viewHeight)
-			.attr("id", "spiralSVG")
-		.append("g")
-			.attr("transform", "translate(" + (viewWidth/2) + "," + (viewHeight/2) + ")");
+			.attr("width", "100%")
+			.attr("height", "100%")
+			.attr("id", "spiralSVG");
 			
-	var spiralEnter = drawSpiral(data, spiralSVG, viewWidth, viewHeight, scale);
+	var spiralRect = spiralSVG.node().getBoundingClientRect();
+	
+	 spiralSVG = spiralSVG.append("g")
+			.attr("transform", "translate(" + (spiralRect.width/2) + "," + (spiralRect.height/2) + ")");
+			
+	var spiralEnter = drawSpiral(data, spiralSVG, spiralRect.width, spiralRect.height, scale);
 	
 	$(".btn").click(function() {
 	switch(this.id) {
 		case "all":
 		case "GNDR":
 		case "ETHCTY":
-			draw(this.id, data, gravityEnter[0], gravitySVG, viewWidth, viewHeight, scale);
+			draw(this.id, data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 			break;
 		case "SORT":
 			sort(gravityEnter[0], spiralEnter);
@@ -140,7 +172,7 @@ function init(data, viewWidth, viewHeight) {
 		}
 	});
 	
-	draw('GNDR', data, gravityEnter[0], gravitySVG, viewWidth, viewHeight, scale);
+	draw('GNDR', data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	
 	/*
 	 * Begin Functions
@@ -195,7 +227,7 @@ function init(data, viewWidth, viewHeight) {
 			return data;
 		}
 		
-	function drawGravity(data, svg, viewWidth, viewHeight) {
+	function drawGravity(data, svg) {
 		
 		var nodes = svg.selectAll("g").data(data);
 	
@@ -208,12 +240,22 @@ function init(data, viewWidth, viewHeight) {
 		var circles = innerG.append("circle")
 			.attr("class", "node")
 			.attr("r", 2)
-			.style("fill", function (d) { return fill(d.ETHCTY);  });
-
+			.style("fill", function (d) { return fill(d.ETHCTY);  })
+			.on("mousedown", function() {
+				console.log("down");
+				$("#content").width("80%");
+				$("#compare").width("20%");
+				})
+			.on("mouseup", function() {
+				console.log("up");
+				$("#content").width("100%");
+				$("#compare").width("0%");
+				});
+				
 		circles.transition().duration(333)
-			.attr("r", function(d) { return d.radius; });
+			.attr("r", function(d) { return d.radius; })
 		
-			innerG.append("text")
+		innerG.append("text")
 			.attr("dx", parseInt(-25*scale))
 			.attr("fill", "white")
 			.attr("font-size", parseInt(STANDARD_FONT_SIZE * (1/(scale))))
@@ -222,7 +264,7 @@ function init(data, viewWidth, viewHeight) {
 		return gravityEnter;
 	}
 	
-	function drawSpiral(data, svg, viewWidth, viewHeight, scale) {
+	function drawSpiral(data, svg, width, height, scale) {
 	
 		var numAxes = 8;
 		var tickAxis = 1;
@@ -254,7 +296,7 @@ function init(data, viewWidth, viewHeight) {
 		
 		var radius = d3.scale.linear()
 			.domain([start, end])
-			.range([0, d3.min([viewWidth, viewHeight])/2 - 20]);
+			.range([0, d3.min([width, height])/2 - 20]);
 		
 		var angle = d3.scale.linear()
 			.domain([start, end])
@@ -272,13 +314,11 @@ function init(data, viewWidth, viewHeight) {
 			.enter().append("path")
 				.attr("class", "spiral")
 				.attr("d", spiral);
-		// 		.attr("transform", function (d) { return "rotate(" + 90 + ")" });
 	
 		return spiralEnter
-	}
+	}	
 	
-	
-	function draw(varname, data, e, svg, viewWidth, viewHeight, scale) {
+	function draw(varname, data, e, svg, width, height, scale) {
 		
 		d3.select(".spiral").style("opacity", "0");
 		
@@ -307,7 +347,7 @@ function init(data, viewWidth, viewHeight) {
 	
 			return centers;
 		};
-		var centers = getCenters(varname, [viewWidth, viewHeight]);
+		var centers = getCenters(varname, [width, height]);
 		force.on("tick", tick(data, centers, varname, e));
 		labels(centers, svg, scale);
 		force.start();
