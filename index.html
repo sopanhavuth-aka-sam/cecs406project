@@ -31,6 +31,7 @@
 			height:100%;
 			background-color: black;
 			border:1px solid red;
+			transition: width 500ms ease;
 		}
 		
 		svg {
@@ -237,20 +238,24 @@ function init(data, viewWidth, viewHeight) {
 		
 		var innerG = gravityEnter.append("g");
 	
+		var drag = d3.behavior.drag()
+			.on("dragstart", dragstarted)
+			.on("drag", dragged)
+			.on("dragend", dragended);
+			
 		var circles = innerG.append("circle")
 			.attr("class", "node")
 			.attr("r", 2)
 			.style("fill", function (d) { return fill(d.ETHCTY);  })
 			.on("mousedown", function() {
-				console.log("down");
 				$("#content").width("80%");
 				$("#compare").width("20%");
 				})
 			.on("mouseup", function() {
-				console.log("up");
 				$("#content").width("100%");
 				$("#compare").width("0%");
-				});
+				})
+			.call(drag);
 				
 		circles.transition().duration(333)
 			.attr("r", function(d) { return d.radius; })
@@ -384,6 +389,20 @@ function init(data, viewWidth, viewHeight) {
 		
  			gi.style.transform = "translate(" + gidx + "px," + gidy + "px)";
 		}
+	}
+	
+	function dragstarted(d) {
+		d3.event.sourceEvent.stopPropagation();
+		d3.select(this).classed("dragging", true);
+	}
+	
+	function dragged(d) {
+	console.log("drag");
+		d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+	}
+	
+	function dragended(d) {
+		d3.select(this).classed("dragging", false);
 	}
 	
 	function tick(data, centers, varname) {
