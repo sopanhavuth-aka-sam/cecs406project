@@ -258,13 +258,7 @@ function init(data, viewWidth, viewHeight) {
 			.attr("font-size", parseInt(STANDARD_FONT_SIZE * (1/(scale))))
 			.text(function(d) { return d.NM; });
 		
-		innerG.on("mousedown", function() {
-				$("#compare").width("20%");
-				})
-			.on("mouseup", function() {
-				$("#compare").width("0%");
-				})
-			.call(drag);
+		innerG.call(drag);
 		
 		return gravityEnter;
 	}
@@ -392,16 +386,35 @@ function init(data, viewWidth, viewHeight) {
 	}
 	
 	function dragstarted(d) {
+		$("#compare").width("20%");
 		d3.event.sourceEvent.stopPropagation();
 		d3.select(this).classed("dragging", true);
 	}
 	
+	var lastDragged = [];
 	function dragged(d) {
-	console.log("drag");
-		d3.select(this).selectAll("*").attr("transform", "translate(" + (d3.event.x) + "," + (d3.event.y) + ")");
+		var p = {};
+		p.x = d.x + d3.event.x;
+		p.y = d.y + d3.event.y;
+		
+		d3.select(this).selectAll("*").attr("transform", "translate(" + d3.event.x + "," + d3.event.y + ")");
+		
+		lastDragged.push(p);
 	}
 	
 	function dragended(d) {
+		var dropBox = d3.select("#compare").node().getBoundingClientRect();
+		var lp = lastDragged.pop();
+		lastDragged = []; // empty stack
+		
+		if (lp.x >= dropBox.left && lp.x <= dropBox.right
+			&& lp.y >= dropBox.top && lp.y <= dropBox.bottom) {
+			d3.select("#compare").style("background-color", "green");
+		}
+		else {
+			d3.select("#compare").style("background-color", "red");
+		}
+	
 		d3.select(this).classed("dragging", false);
 		d3.select(this).selectAll("*").transition().duration(500).attr("transform", "translate(0,0)");
 	}
