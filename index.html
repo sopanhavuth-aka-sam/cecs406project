@@ -138,23 +138,7 @@ function reset() {
 }
 	
 function init(data, viewWidth, viewHeight) {
-			
-			
-	var dropboxrect = d3.select("#content").node().getBoundingClientRect();
-			
-			console.log(dropboxrect);
-	var gravitybox = createGravityBox({
-		root: d3.select("#box"),
-		width: parseInt(dropboxrect.width * 0.5),
-		height: dropboxrect.height,
-		nodeClass: 'node',
-		nodeElementName: 'circle',
-		xAttr: 'cx',
-		yAttr: 'cy'
-	});
-	
-	console.log(gravitybox);
-	
+				
 	// hacking
 	var scaleSVG = d3.select('#content').append("svg");
 	var scale = scaleSVG[0][0].currentScale;
@@ -395,23 +379,31 @@ function init(data, viewWidth, viewHeight) {
 			var gi = g.getElementsByTagName("g")[0];
 // 			var text = g.getElementsByTagName("text")[0];
 			
-			var transform = g.getAttribute("transform");
-			var matches = transform.match(/\d*\.\d*/g);
 			
-			// g element current translation
-			var x1 = matches[0];
-			var y1 = matches[1];
+			var trans = getCurrentTranslation(g);
 			
 			// target translation position relative to svg (0,0)
 			var x2 = (viewWidth/2) + spiralPoint.x;
 			var y2 = (viewHeight/2) + spiralPoint.y;
 			
 			// calculate the offset from g element's current translation
-			var gidx = x2 - x1;
-			var gidy = y2 - y1;
+			var gidx = x2 - trans.x;
+			var gidy = y2 - trans.y;
 		
  			gi.style.transform = "translate(" + gidx + "px," + gidy + "px)";
 		}
+	}
+	
+	function getCurrentTranslation(g) {
+		var transform = g.getAttribute("transform");
+		var matches = transform.match(/-?\d+\.\d+/g);
+			
+		var p = {};
+			// g element current translation
+		p.x = matches[0];
+		p.y = matches[1];
+		
+		return p;
 	}
 	
 	function dragstarted(d) {
@@ -419,6 +411,7 @@ function init(data, viewWidth, viewHeight) {
 		d3.event.sourceEvent.stopPropagation();
 		d3.select(this).classed("dragging", true);
 	}
+	
 	
 	var lastDragged = [];
 	function dragged(d) {
@@ -429,7 +422,6 @@ function init(data, viewWidth, viewHeight) {
 		var innerG = d3.select(this);
 		innerG.selectAll("*").attr("transform", "translate(" + d3.event.x + "," + d3.event.y + ")");
 		
-		console.log(p.x + "," + p.y);
 		lastDragged.push(p);
 	}
 	
@@ -437,48 +429,16 @@ function init(data, viewWidth, viewHeight) {
 		
 		var dropBox = d3.select("#compare").node().getBoundingClientRect();
 		
-// 		var firstPosition = lastDragged.shift(); // get starting position
-// 		
 		var lastPosition = lastDragged.pop(); // get last position
-// 
-// 		var interpolatePosition = lastDragged.pop(); // get interpolate position
-// 		
-// 		lastDragged = [];
-// 		
-// 		var dx = lastPosition.x + 1;
-// 		var dy = lastPosition.y + 1;
-// 
-// 		console.log(dx + "," + dy);		
-// 		var nextx = interpolatePosition.x - firstPosition.x;
-// 		var nexty = interpolatePosition.y - firstPosition.y;
-// 		
-// 		console.log(nextx + "," + nexty);
-// 				console.log(lastPosition);
-// 		
+		lastDragged = [];
+		
 		if (lastPosition.x >= dropBox.left && lastPosition.x <= dropBox.right
 			&& lastPosition.y >= dropBox.top && lastPosition.y <= dropBox.bottom) {
 			
-			// HERE
+			var g = d3.select(this);
 			
-			var circle = d3.select(this).selectAll("circle")[0][0];
+			fall(g, lastPosition, dropBox);
 			
-			console.log(circle);
-			function c(i) {
-			return {
-				x: 20,
-				y:0,
-				attrs: {
-					r: circle.getAttribute("r")
-				},
-				styles: {
-					fill: circle.style.fill
-				}
-			}
-			}
-			
-			var next = d3.range(1).map(c);
-			gravitybox.add(next);
-			gravitybox.render();
 			d3.select(this).classed("inspecting", true);
 			d3.select("#compare").style("background-color", "green");			
 			
@@ -510,6 +470,39 @@ function init(data, viewWidth, viewHeight) {
 		}
 	};
 	
+	function fall(g, lp, db) {
+	
+		var pos = lp;
+		
+		var circle = g.selectAll("*")[0][0];
+		var text = g.selectAll("*")[0][1];
+	
+		var currTrans = getCurrentTranslation(circle);
+		
+		console.log(currTrans);
+		
+		var i = 0;
+		while (pos.y < (db.bottom - circle.getAttribute("r"))) {
+			setTimeout( function() {
+				falldown(i, circle, text);
+			},(i++)*60);
+			
+			pos.y = parseInt(pos.y) + 5;
+		}
+		
+		console.log("exit");
+		
+	
+	}
+	
+	function falldown(i, circle, text) {
+			var currTrans = getCurrentTranslation(circle);
+			console.log(getCurrentTranslation(circle));
+				
+			var newy = parseFloat(currTrans.y) + 5.0;
+			circle.setAttribute("transform", "translate(" + currTrans.x + "," +  newy + ")");
+			text.setAttribute("transform", "translate(" + currTrans.x + "," + currTrans.y + ")");
+	}
 	function labels(centers, gravitySVG, scale) {
 	
 		var gravitySVG = d3.select("#gravitySVG");
