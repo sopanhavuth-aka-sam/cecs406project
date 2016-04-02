@@ -397,26 +397,50 @@ function init(data, viewWidth, viewHeight) {
 		p.x = d.x + d3.event.x;
 		p.y = d.y + d3.event.y;
 		
-		d3.select(this).selectAll("*").attr("transform", "translate(" + d3.event.x + "," + d3.event.y + ")");
+		var innerG = d3.select(this);
+		innerG.selectAll("*").attr("transform", "translate(" + d3.event.x + "," + d3.event.y + ")");
 		
+		console.log(p.x + "," + p.y);
 		lastDragged.push(p);
 	}
 	
 	function dragended(d) {
-		var dropBox = d3.select("#compare").node().getBoundingClientRect();
-		var lp = lastDragged.pop();
-		lastDragged = []; // empty stack
 		
-		if (lp.x >= dropBox.left && lp.x <= dropBox.right
-			&& lp.y >= dropBox.top && lp.y <= dropBox.bottom) {
-			d3.select("#compare").style("background-color", "green");
+		var dropBox = d3.select("#compare").node().getBoundingClientRect();
+		
+// 		var firstPosition = lastDragged.shift(); // get starting position
+// 		
+		var lastPosition = lastDragged.pop(); // get last position
+// 
+// 		var interpolatePosition = lastDragged.pop(); // get interpolate position
+// 		
+// 		lastDragged = [];
+// 		
+// 		var dx = lastPosition.x + 1;
+// 		var dy = lastPosition.y + 1;
+// 
+// 		console.log(dx + "," + dy);		
+// 		var nextx = interpolatePosition.x - firstPosition.x;
+// 		var nexty = interpolatePosition.y - firstPosition.y;
+// 		
+// 		console.log(nextx + "," + nexty);
+// 				console.log(lastPosition);
+// 		
+		if (lastPosition.x >= dropBox.left && lastPosition.x <= dropBox.right
+			&& lastPosition.y >= dropBox.top && lastPosition.y <= dropBox.bottom) {
+			
+			// HERE
+			d3.select(this).selectAll("*").transition().duration(500).style("opacity", "0");
+			d3.select(this).classed("inspecting", true);
+			d3.select("#compare").style("background-color", "green");			
+			
 		}
 		else {
 			d3.select("#compare").style("background-color", "red");
+			d3.select(this).selectAll("*").transition().duration(500).attr("transform", "translate(0,0)");
 		}
 	
 		d3.select(this).classed("dragging", false);
-		d3.select(this).selectAll("*").transition().duration(500).attr("transform", "translate(0,0)");
 	}
 	
 	function tick(data, centers, varname) {
@@ -443,8 +467,6 @@ function init(data, viewWidth, viewHeight) {
 		var gravitySVG = d3.select("#gravitySVG");
 		
 		gravitySVG.selectAll(".label").remove();
-		
-		console.log(gravitySVG);
 		
 		gravitySVG.selectAll(".label")
 			.data(centers).enter().append("text")
