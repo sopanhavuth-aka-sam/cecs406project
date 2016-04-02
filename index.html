@@ -8,6 +8,17 @@
 			margin:40px;
 		}
 		
+		#boxout {
+			width:100%;
+			height:100%;
+		}
+		
+		#box {
+		width:100%;
+		height:100%;
+			z-index 1000;
+		}
+		
 		#container {
 			width:100%;
 			float:left;
@@ -89,8 +100,10 @@
 	<div id="content"></div>
 	<div id="compare">
 		<button>BTN</button>
+		<svg id="boxout"><g id="box"></svg>
 	</div>
 </div>
+<script src="node_modules/gravitybox/gravitybox.js"></script>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script src="node_modules/jquery/dist/jquery.js"></script>
 <script src="node_modules/underscore/underscore.js"></script>
@@ -126,6 +139,22 @@ function reset() {
 	
 function init(data, viewWidth, viewHeight) {
 			
+			
+	var dropboxrect = d3.select("#content").node().getBoundingClientRect();
+			
+			console.log(dropboxrect);
+	var gravitybox = createGravityBox({
+		root: d3.select("#box"),
+		width: parseInt(dropboxrect.width * 0.5),
+		height: dropboxrect.height,
+		nodeClass: 'node',
+		nodeElementName: 'circle',
+		xAttr: 'cx',
+		yAttr: 'cy'
+	});
+	
+	console.log(gravitybox);
+	
 	// hacking
 	var scaleSVG = d3.select('#content').append("svg");
 	var scale = scaleSVG[0][0].currentScale;
@@ -430,7 +459,26 @@ function init(data, viewWidth, viewHeight) {
 			&& lastPosition.y >= dropBox.top && lastPosition.y <= dropBox.bottom) {
 			
 			// HERE
-			d3.select(this).selectAll("*").transition().duration(500).style("opacity", "0");
+			
+			var circle = d3.select(this).selectAll("circle")[0][0];
+			
+			console.log(circle);
+			function c(i) {
+			return {
+				x: 20,
+				y:0,
+				attrs: {
+					r: circle.getAttribute("r")
+				},
+				styles: {
+					fill: circle.style.fill
+				}
+			}
+			}
+			
+			var next = d3.range(1).map(c);
+			gravitybox.add(next);
+			gravitybox.render();
 			d3.select(this).classed("inspecting", true);
 			d3.select("#compare").style("background-color", "green");			
 			
