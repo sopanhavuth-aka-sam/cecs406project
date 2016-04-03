@@ -482,10 +482,8 @@ function init(data, viewWidth, viewHeight) {
 		
 		var i = 0;
 		
-		console.log("dbb " + pos.y);
-		
 		// subtract window offset to get document space
-		var bottom = db.bottom - window.scrollY;
+		var bottom = db.bottom + window.scrollY;
 		
 		while (pos.y < (bottom - circle.getAttribute("r"))) {
 			setTimeout( function() {
@@ -501,6 +499,8 @@ function init(data, viewWidth, viewHeight) {
 	
 	function falldown(i, circle, text) {
 			var currTrans = getCurrentTranslation(circle);				
+			
+			console.log("dx = " + circle.dx);
 			
 			circle.setAttribute("transform", "translate(" + currTrans.x + "," + (parseFloat(currTrans.y) + 1.0) + ")");
 			text.setAttribute("transform", "translate(" + currTrans.x + "," + currTrans.y + ")");
