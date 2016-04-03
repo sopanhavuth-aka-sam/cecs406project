@@ -4,6 +4,10 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<title> NYC Baby Names</title>
 	<style>
+	
+	button {
+		z-index=10001;
+	}
 		body {
 			margin:40px;
 		}
@@ -22,26 +26,23 @@
 		#container {
 			width:100%;
 			float:left;
-			border:1px solid black;
 		}
 		
 		#content {
 			position: absolute;
-			top:80px;
+			top:0px;
 			left:0px;
 			width:100%;
 			height:100%;
-			border:1px solid blue;
 		}
 		
 		#compare {
 		position:absolute;
-			top:80px;
+			top:0px;
 			right:0;
 			width:0%;
 			height:100%;
 			background-color: black;
-			border:1px solid red;
 			transition: width 500ms ease;
 		}
 		
@@ -51,7 +52,7 @@
 		
 		#gravitySVG {
 			position:absolute;
-			top:80px;
+			top:0;
 			left:0;
 			z-index: 1;
 	
@@ -59,7 +60,7 @@
 		
 		#spiralSVG {
 			position:absolute;
-			top:80px;
+			top:0;
 			left:0;
 			z-index: -1;
 		}
@@ -471,7 +472,7 @@ function init(data, viewWidth, viewHeight) {
 	};
 	
 	function fall(g, lp, db) {
-	
+		
 		var pos = lp;
 		
 		var circle = g.selectAll("*")[0][0];
@@ -479,30 +480,33 @@ function init(data, viewWidth, viewHeight) {
 	
 		var currTrans = getCurrentTranslation(circle);
 		
-		console.log(currTrans);
-		
 		var i = 0;
-		while (pos.y < (db.bottom - circle.getAttribute("r"))) {
+		
+		console.log("dbb " + pos.y);
+		
+		// subtract window offset to get document space
+		var bottom = db.bottom - window.scrollY;
+		
+		while (pos.y < (bottom - circle.getAttribute("r"))) {
 			setTimeout( function() {
 				falldown(i, circle, text);
-			},(i++)*60);
+			},(i++)*1);
 			
-			pos.y = parseInt(pos.y) + 5;
+			pos.y = parseInt(pos.y) + 1;
 		}
 		
-		console.log("exit");
 		
 	
 	}
 	
 	function falldown(i, circle, text) {
-			var currTrans = getCurrentTranslation(circle);
-			console.log(getCurrentTranslation(circle));
-				
-			var newy = parseFloat(currTrans.y) + 5.0;
-			circle.setAttribute("transform", "translate(" + currTrans.x + "," +  newy + ")");
+			var currTrans = getCurrentTranslation(circle);				
+			
+			circle.setAttribute("transform", "translate(" + currTrans.x + "," + (parseFloat(currTrans.y) + 1.0) + ")");
 			text.setAttribute("transform", "translate(" + currTrans.x + "," + currTrans.y + ")");
 	}
+	
+	
 	function labels(centers, gravitySVG, scale) {
 	
 		var gravitySVG = d3.select("#gravitySVG");
