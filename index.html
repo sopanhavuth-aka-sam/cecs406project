@@ -472,16 +472,19 @@ function init(data, viewWidth, viewHeight) {
 	};
 	
 	
+	var droppedElements = [];
 	var GRAVITY = [0,1];
 	function fall(g, lp, db) {
 		
 		var circle = g.selectAll("*")[0][0];
 		var text = g.selectAll("*")[0][1];
 		
-		var bottom = db.bottom + window.scrollY;
+		var env = {};
+		env.bottom = db.bottom + window.scrollY;
 		
 		circle.absY = (circle.getBoundingClientRect().top + window.scrollY) + (circle.getBoundingClientRect().height/2);
 		circle.absX = (circle.getBoundingClientRect().left + window.scrollX) + (circle.getBoundingClientRect().width/2);
+		circle.radius = parseFloat(circle.getAttribute("r"));
 		circle.dy = 0;
 		circle.dx = 0;
 		
@@ -490,39 +493,98 @@ function init(data, viewWidth, viewHeight) {
 		var data = [];
 		while (true) {
 		
-			data[i] = applyForce(circle, bottom);
+			data[i] = applyForce(circle, env, droppedElements);
+			
+			console.log("speed = " + parseFloat(data[i][0]) + ", " + parseFloat(data[i][1]));
 			
 			anime(i, data, circle, text);
 			i++;
 			
 			if (atRest(circle)) break;
 		}
+		
+		droppedElements.push(circle);
 	}
 	
 	function atRest(circle) {
 		return circle.dy == 0;
 	}
 	
-	function applyForce(circle, bottom) {
+	function applyForce(circle, env, alreadyDropped) {
+		
+		for (var i = 0; i < alreadyDropped.length; i++) {
+			if (detectCollision(circle, alreadyDropped[i]))
+			{
+				return performCollision(circle, alreadyDropped[i])
+			} else {
+				// no collision yet
+			}
+		}
+		
 		var oldy = circle.absY;
 		circle.dy += GRAVITY[1];
 		circle.absY += circle.dy;
 		var y = circle.dy;
-		if (circle.absY > bottom) {
+		if (circle.absY > env.bottom) {
 			circle.dy = 0;
-			return bottom - parseFloat(circle.getAttribute("r")) - oldy;
+			return [circle.dx, (env.bottom - parseFloat(circle.getAttribute("r")) - oldy)];
 		}
 		else {
-			return y;
+			return [circle.dx, circle.dy];
 		}
 	}
 	
+	function performCollision(collider, other) {
+		var dx = collider.absX - other.absX;
+		var dy = collider.absY - other.absY;
+		
+	
+		if (dx < 0) {
+			sign = -1
+		}
+		else {
+			sign = 1;
+		}
+		
+		var mag = INELASTIC_COEFFICIENT * Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+		
+		console.log("dx = " + dx);
+		console.log("dy = " + dy);
+		
+		if (dx != 0) {
+			var theta = Math.atan(dy/dx);
+			console.log("theta = " + theta);
+			collider.dx = mag * Math.cos(theta) * sign;
+			collider.dy = mag * Math.sin(theta)* sign;
+		}
+		else {
+			collider.dx = 0;
+			collider.dy =  mag * (-1);
+		}
+		
+		collider.absX += parseFloat(collider.dx);
+		collider.absY += parseFloat(collider.dy);
+		
+		return [parseFloat(collider.dx) , parseFloat(collider.dy)];
+	}
+	
+	function detectCollision(c1, c2) {
+		var dx = c1.absX - c2.absX;
+		var dy = c1.absY - c2.absY;
+		var distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+		
+		return distance <= (c1.radius + c2.radius);
+	}
+	
+	var INELASTIC_COEFFICIENT = 0.5;
+	
 	function anime(i, data, circle, text) {
 		setTimeout(function() {
-			var currTrans = getCurrentTranslation(circle);						
- 			console.log(data[i]);
-			circle.setAttribute("transform", "translate(" + currTrans.x + "," + (parseFloat(currTrans.y) + parseFloat(data[i])) + ")");
-			text.setAttribute("transform", "translate(" + currTrans.x + "," + (parseFloat(currTrans.y) + parseFloat(data[i])) + ")");
+			var currTrans = getCurrentTranslation(circle);
+			var x = parseFloat(currTrans.x) + parseFloat(data[i][0]);
+			var y = parseFloat(currTrans.y) + parseFloat(data[i][1]);						
+			circle.setAttribute("transform", "translate(" + x + "," + y + ")");
+			text.setAttribute("transform", "translate(" + x + "," + y + ")");
 		}, i * 60);
 	}
 	
