@@ -471,39 +471,59 @@ function init(data, viewWidth, viewHeight) {
 		}
 	};
 	
+	
+	var GRAVITY = [0,1];
 	function fall(g, lp, db) {
-		
-		var pos = lp;
 		
 		var circle = g.selectAll("*")[0][0];
 		var text = g.selectAll("*")[0][1];
-	
-		var currTrans = getCurrentTranslation(circle);
+		
+		var bottom = db.bottom + window.scrollY;
+		
+		circle.absY = (circle.getBoundingClientRect().top + window.scrollY) + (circle.getBoundingClientRect().height/2);
+		circle.absX = (circle.getBoundingClientRect().left + window.scrollX) + (circle.getBoundingClientRect().width/2);
+		circle.dy = 0;
+		circle.dx = 0;
 		
 		var i = 0;
 		
-		// subtract window offset to get document space
-		var bottom = db.bottom + window.scrollY;
+		var data = [];
+		while (true) {
 		
-		while (pos.y < (bottom - circle.getAttribute("r"))) {
-			setTimeout( function() {
-				falldown(i, circle, text);
-			},(i++)*1);
+			data[i] = applyForce(circle, bottom);
 			
-			pos.y = parseInt(pos.y) + 1;
+			anime(i, data, circle, text);
+			i++;
+			
+			if (atRest(circle)) break;
 		}
-		
-		
-	
 	}
 	
-	function falldown(i, circle, text) {
-			var currTrans = getCurrentTranslation(circle);				
-			
-			console.log("dx = " + circle.dx);
-			
-			circle.setAttribute("transform", "translate(" + currTrans.x + "," + (parseFloat(currTrans.y) + 1.0) + ")");
-			text.setAttribute("transform", "translate(" + currTrans.x + "," + currTrans.y + ")");
+	function atRest(circle) {
+		return circle.dy == 0;
+	}
+	
+	function applyForce(circle, bottom) {
+		var oldy = circle.absY;
+		circle.dy += GRAVITY[1];
+		circle.absY += circle.dy;
+		var y = circle.dy;
+		if (circle.absY > bottom) {
+			circle.dy = 0;
+			return bottom - parseFloat(circle.getAttribute("r")) - oldy;
+		}
+		else {
+			return y;
+		}
+	}
+	
+	function anime(i, data, circle, text) {
+		setTimeout(function() {
+			var currTrans = getCurrentTranslation(circle);						
+ 			console.log(data[i]);
+			circle.setAttribute("transform", "translate(" + currTrans.x + "," + (parseFloat(currTrans.y) + parseFloat(data[i])) + ")");
+			text.setAttribute("transform", "translate(" + currTrans.x + "," + (parseFloat(currTrans.y) + parseFloat(data[i])) + ")");
+		}, i * 60);
 	}
 	
 	
