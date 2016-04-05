@@ -1,102 +1,125 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<style>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Interactive BarChart</title>
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		<style>
+		</style>
+	</head>
+		<body>
+		
+			<div id="demo">
+				<div id="userInput">
+					<button id="top10Button">Top 10</button>
+					<br>
+					<label><input type="checkbox" id="hispanicCheckBox" >Hispanic</label>
+					<label><input type="checkbox" id="asianCheckBox" >Asian</label>
+					<label><input type="checkbox" id="blackCheckBox" >Black</label>
+					<label><input type="checkbox" id="whiteCheckBox" >White</label>
+				</div>
+				<svg id="canvas"></svg>
+			</div>
+			
+			<script>
+				var selectedNames = [];
+				//variables to store 2 top ten name
+				//(20 total = top 10 males and top 10 female) in each race
+				var topHispanic = [];
+				var topAsian = [];
+				var topBlack = [];
+				var topWhite = [];
 
-.bar {
-  fill: steelblue;
-}
+				//parsing and searching
+				d3.csv("clean-babyNameDB.csv", function(error, dataSet) {
+					//type conversion (string to int); search for top name
+					dataSet.forEach(function(d) {
+						d.BRTH_YR = +d.BRTH_YR;
+						d.CNT = +d.CNT;
+						d.RNK = +d.RNK;
+						d.enabled = true;
 
-.bar:hover {
-  fill: brown;
-}
-
-.axis {
-  font: 10px sans-serif;
-}
-
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-.x.axis path {
-  display: none;
-}
-
-</style>
-<body>
-<script src="http://d3js.org/d3.v3.min.js"></script>
-<script>
-
-var margin = {top: 20, right: 20, bottom: 30, left: 40},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
-
-var x = d3.scale.ordinal()
-    .rangeRoundBands([0, width], .1);
-
-var y = d3.scale.linear()
-    .range([height, 0]);
-
-var xAxis = d3.svg.axis()
-    .scale(x)
-    .orient("bottom");
-
-var yAxis = d3.svg.axis()
-    .scale(y)
-    .orient("left")
-    .ticks(10, "%");
-
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-d3.xml("data.xml", function(error, data) {
-//d3.xml("BabyNameData.xml", function(error, data) {
-  if (error) throw error;
-
-  // Convert the XML document to an array of objects.
-  // Note that querySelectorAll returns a NodeList, not a proper Array,
-  // so we must use map.call to invoke array methods.
-  data = [].map.call(data.querySelectorAll("letter"), function(letter) {
-    return {
-      letter: letter.getAttribute("id"),
-      frequency: +letter.querySelector("frequency").textContent
-	  //letter: letter.getAttribute("nm"),
-      //frequency: +letter.querySelector("").textContent
-    };
-  });
-
-  x.domain(data.map(function(d) { return d.letter; }));
-  y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
-
-  svg.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0," + height + ")")
-      .call(xAxis);
-
-  svg.append("g")
-      .attr("class", "y axis")
-      .call(yAxis)
-    .append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 6)
-      .attr("dy", ".71em")
-      .style("text-anchor", "end")
-      .text("Frequency");
-
-  svg.selectAll(".bar")
-      .data(data)
-    .enter().append("rect")
-      .attr("class", "bar")
-      .attr("x", function(d) { return x(d.letter); })
-      .attr("width", x.rangeBand())
-      .attr("y", function(d) { return y(d.frequency); })
-      .attr("height", function(d) { return height - y(d.frequency); });
-});
-
-</script>
+						if("HISPANIC".localeCompare(d.ETHCTY) == 0 && d.RNK <= 10) {
+							topHispanic.push(d);
+						}
+						else if("ASIAN AND PACIFIC ISLANDER".localeCompare(d.ETHCTY) == 0 && d.RNK <= 10) {
+							topAsian.push(d);
+						} 
+						else if("BLACK NON HISPANIC".localeCompare(d.ETHCTY) == 0 && d.RNK <= 10) {
+							topBlack.push(d);
+						} 
+						else if("WHITE NON HISPANIC".localeCompare(d.ETHCTY) == 0 && d.RNK <= 10) {
+							topWhite.push(d);
+						}
+					});//end: type conversion; search for top name
+				});//end: parsing and searching
+			
+				//////////////////////////////////guideline for script seperation later on/////////////////////////////////////////////////////
+				//combine 'top' arrys based on what option is checked in userInput
+				function combineRace() {
+				console.log("hello1");
+					var selectedNames = [];
+					if(document.getElementById("hispanicCheckBox").checked) {
+						selectedNames = selectedNames.concat(topHispanic);
+					}
+					if(document.getElementById("asianCheckBox").checked) {
+						selectedNames = selectedNames.concat(topAsian);
+					}
+					if(document.getElementById("blackCheckBox").checked) {
+						selectedNames = selectedNames.concat(topBlack);
+					}
+					if(document.getElementById("whiteCheckBox").checked) {
+						selectedNames = selectedNames.concat(topWhite);
+					}
+					return selectedNames;
+				}//end: combineRace
+				
+				//update "selectedNames" array when button is clicked.
+				document.getElementById('top10Button').onclick = function() {
+					selectedNames = combineRace();
+					//TEST: sort selectedNames
+					selectedNames.sort(function(a,b) {
+								return parseInt(b.CNT, 10) - parseInt(a.CNT, 10); 
+							});
+					console.log(selectedNames);
+					selectedNames = topN(selectedNames, 10);
+					console.log(selectedNames);
+				};
+				
+				//Filter function base on 'count' property of each name
+				//param: array (that need to be filter), N (e.g. 10, 20 -> return top 10, top 20 names)
+				function topN(nameArr, N) {
+					var topArr = []; //store top names to return to caller
+					
+					//iterate thourgh all the name
+					for(i = 0; i < nameArr.length; i++) {
+						if (i < N) { //topArr is !full(N elements) -> push to element
+							topArr.push(nameArr[i]);
+						}
+						else if(topArr.length == N) { //sort topArr base on name's element: CNT
+							topArr.sort(function(a,b) {
+								return parseInt(b.CNT, 10) - parseInt(a.CNT, 10); 
+							});
+						}
+						//topArr is full
+						//-> compare new element to smallest topArr's element (last index)
+						//-> if new element is larger, replace ir
+						//-> re-sort
+						//-> else, do nothing
+						else {
+							if(topArr[topArr.length - 1].CNT < nameArr[i].CNT) {
+								//replace element
+								topArr[topArr.length - 1] = nameArr[i];
+								//re-sort
+								topArr.sort(function(a,b) {
+									return parseInt(b.CNT, 10) - parseInt(a.CNT, 10); 
+								});
+							}
+							//else, do nothing
+						}
+					}
+					return topArr;
+				}//end: topN
+		</script>
+	</body>
+</html>
