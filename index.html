@@ -113,12 +113,12 @@
 var CIRCLE_PADDING_FACTOR = 13.0;
 var COLLISION_FACTOR = 0.2;
 var MIN_RADIUS_FACTOR = 0.00002;
-var MAX_RADIUS_FACTOR = 0.00004;
+var MAX_RADIUS_FACTOR = 0.00006;
 var STANDARD_FONT_SIZE = 9;
 
 
 var redraw = function() { 
-	d3.csv("data_full.csv", function(error, data) {
+	d3.csv("clean.csv", function(error, data) {
 	
 		reset();
 		
@@ -416,6 +416,7 @@ function init(data, viewWidth, viewHeight) {
 	
 	var lastDragged = [];
 	function dragged(d) {
+		
 		var p = {};
 		p.x = d.x + d3.event.x;
 		p.y = d.y + d3.event.y;
@@ -428,6 +429,8 @@ function init(data, viewWidth, viewHeight) {
 	
 	function dragended(d) {
 		
+				console.log(d);
+				
 		var dropBox = d3.select("#compare").node().getBoundingClientRect();
 		
 		var lastPosition = lastDragged.pop(); // get last position
@@ -480,6 +483,8 @@ function init(data, viewWidth, viewHeight) {
 		var text = g.selectAll("*")[0][1];
 		
 		var env = {};
+		env.left = db.left + window.scrollX;
+		env.right = db.right + window.scrollX;
 		env.bottom = db.bottom + window.scrollY;
 		
 		circle.absY = (circle.getBoundingClientRect().top + window.scrollY) + (circle.getBoundingClientRect().height/2);
@@ -495,7 +500,8 @@ function init(data, viewWidth, viewHeight) {
 		
 			data[i] = applyForce(circle, env, droppedElements);
 			
-			console.log("speed = " + parseFloat(data[i][0]) + ", " + parseFloat(data[i][1]));
+			// console.log("posit = " + parseFloat(circle.absX) + ", " + parseFloat(circle.absY));
+// 			console.log("speed = " + parseFloat(data[i][0]) + ", " + parseFloat(data[i][1]));
 			
 			anime(i, data, circle, text);
 			i++;
@@ -512,33 +518,73 @@ function init(data, viewWidth, viewHeight) {
 	
 	function applyForce(circle, env, alreadyDropped) {
 		
-		for (var i = 0; i < alreadyDropped.length; i++) {
-			if (detectCollision(circle, alreadyDropped[i]))
-			{
-				return performCollision(circle, alreadyDropped[i])
-			} else {
-				// no collision yet
-			}
-		}
-		
-		var oldy = circle.absY;
-		circle.dy += GRAVITY[1];
-		circle.absY += circle.dy;
-		var y = circle.dy;
 		if (circle.absY > env.bottom) {
+			var oldy = circle.absY;
 			circle.dy = 0;
 			return [circle.dx, (env.bottom - parseFloat(circle.getAttribute("r")) - oldy)];
 		}
 		else {
-			return [circle.dx, circle.dy];
+			if (detectCollisionWithEnv(circle, env)) {
+				return performCollisionWithEnv(circle, env);
+			}
+			else {
+				for (var i = 0; i < alreadyDropped.length; i++) {
+					if (detectCollision(circle, alreadyDropped[i]))
+					{
+						return performCollision(circle, alreadyDropped[i])
+					} else {
+						// no collision with others
+					}
+				}
+				
+				// no collision yet
+
+				circle.dy += GRAVITY[1];
+				circle.absX += circle.dx;
+				circle.absY += circle.dy;
+				return [circle.dx, circle.dy];
+			}
 		}
 	}
 	
+	function detectCollisionWithEnv(circle, env) {
+		if (env.left >= (parseFloat(circle.absX) - circle.radius) 
+			|| (env.right <= parseFloat(circle.absX) + circle.radius)) {
+// 		debugger;
+			return true;
+		}
+	}
+	
+	function performCollisionWithEnv(circle, env) {
+	
+		var speed = Math.sqrt(Math.pow(circle.dx, 2) + Math.pow(circle.dy, 2))
+		
+		if (circle.dx != 0) {				
+			var theta = Math.atan(circle.dx/circle.dy);
+			circle.dx = speed * Math.sin(theta) * -1;
+			circle.dy = speed * Math.cos(theta);
+			
+			// console.log("theta = " + theta);
+// 			console.log("dx = " + circle.dx);
+// 			console.log("dy = " + circle.dy);
+		}
+		else {
+			circle.dx = 0;
+			circle.dy = 1;
+		}
+		
+		circle.absX += parseFloat(circle.dx);
+		circle.absY += parseFloat(circle.dy);
+	
+		return [parseFloat(circle.dx) , parseFloat(circle.dy)];
+	}
+	
+	
 	function performCollision(collider, other) {
+	
 		var dx = collider.absX - other.absX;
 		var dy = collider.absY - other.absY;
 		
-	
 		if (dx < 0) {
 			sign = -1
 		}
@@ -548,14 +594,12 @@ function init(data, viewWidth, viewHeight) {
 		
 		var mag = INELASTIC_COEFFICIENT * Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 		
-		console.log("dx = " + dx);
-		console.log("dy = " + dy);
-		
 		if (dx != 0) {
 			var theta = Math.atan(dy/dx);
-			console.log("theta = " + theta);
 			collider.dx = mag * Math.cos(theta) * sign;
-			collider.dy = mag * Math.sin(theta)* sign;
+			collider.dy = mag * Math.sin(theta);
+			
+			if (collider.dy > 0) collider.dy *= -1;
 		}
 		else {
 			collider.dx = 0;
@@ -565,10 +609,11 @@ function init(data, viewWidth, viewHeight) {
 		collider.absX += parseFloat(collider.dx);
 		collider.absY += parseFloat(collider.dy);
 		
-		return [parseFloat(collider.dx) , parseFloat(collider.dy)];
+		return [parseFloat(collider.dx), parseFloat(collider.dy)];
 	}
 	
-	function detectCollision(c1, c2) {
+	function detectCollision(c1, c2, env) {
+	
 		var dx = c1.absX - c2.absX;
 		var dy = c1.absY - c2.absY;
 		var distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
@@ -586,8 +631,7 @@ function init(data, viewWidth, viewHeight) {
 			circle.setAttribute("transform", "translate(" + x + "," + y + ")");
 			text.setAttribute("transform", "translate(" + x + "," + y + ")");
 		}, i * 60);
-	}
-	
+	}	
 	
 	function labels(centers, gravitySVG, scale) {
 	
