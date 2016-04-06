@@ -489,16 +489,13 @@ function init(data, viewWidth, viewHeight) {
 		var atRest = 1.0 > Math.sqrt((Math.pow(circle.dx, 2) + Math.pow(circle.dy, 2)));
 		
 		var isSupported = false;
-		for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
+		for (var i = DROPPED_ELEMENTS.length - 1; i >= 0; i--) {
 			var other =  DROPPED_ELEMENTS[i];
-			var topOther = other.absY - parseFloat(other.radius);
-			var bottomCircle = circle.absY + parseFloat(circle.radius);
-			
 			var dx = circle.absX - parseFloat(other.absX);
 			var dy = circle.absY - parseFloat(other.absY)
 			var distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 			console.log(distance);
-			if (distance <= (circle.radius + parseFloat(other.radius) + 1)) {
+			if (distance <= (circle.radius + parseFloat(other.radius))) {
 				isSupported = true;
 			}
 		}
@@ -508,7 +505,7 @@ function init(data, viewWidth, viewHeight) {
 	
 	function applyForce(frame, circle, text, env) {
 			
-		for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
+		for (var i = DROPPED_ELEMENTS.length - 1; i >= 0; i--) {
 			if (collision(frame, circle, text, env, DROPPED_ELEMENTS[i])) {
 				return;
 			}
@@ -581,12 +578,12 @@ function init(data, viewWidth, viewHeight) {
 				if (ymag != 0.0) {
 				
 					var theta = Math.atan(xmag/ymag);
-					dx = circle.dx = speed * Math.sin(theta) * -1.0;
-					dy = circle.dy = speed * Math.cos(theta) * -1.0;
+					dx = circle.dx = speed * INELASTIC_COEFFICIENT * Math.sin(theta) * -1.0;
+					dy = circle.dy = speed * INELASTIC_COEFFICIENT * Math.cos(theta) * -1.0;
 					
 				}
 				else {
-					dx = circle.dx = circle.dx * 1.0; // symmetry
+					dx = circle.dx = INELASTIC_COEFFICIENT * circle.dx * 1.0; // symmetry
 					dy = circle.dy = 0.0;
 				}
 				
@@ -616,26 +613,6 @@ function init(data, viewWidth, viewHeight) {
 
 		circle.absX += parseFloat(dx);
 		circle.absY += parseFloat(dy);
-
-// 		else {
-// 			for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
-// 				var other = DROPPED_ELEMENTS[i];
-// 				var xmag = parseFloat(circle.absX) - other.absX;
-// 				var ymag = parseFloat(circle.absY) - other.absY;
-// 				var distance = Math.sqrt(Math.pow(xmag, 2) + Math.pow(ymag, 2));		
-// 				if (distance <= (parseFloat(circle.radius) + other.radius)) {
-// 					if(xmag != 0.0) {
-// 						var theta = Math.atan(ymag/xmag)
-// 						dx = Math.sin(theta) * (parseFloat(circle.radius) + other.radius) * -1;
-// 						dy = Math.cos(theta) * (parseFloat(circle.radius) + other.radius) * -1;
-// 					}
-// 					else {
-// 						dx = 0.0
-// 						dy = (parseFloat(circle.radius) + other.radius) * -1;
-// 					}
-// 				}
-// 			}
-// 		}
 			
 		setTimeout(function() {
 			var current = getCurrentTranslation(circle);
