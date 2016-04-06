@@ -476,10 +476,19 @@ function init(data, viewWidth, viewHeight) {
 		
 		var frame = 0;	
 		while (true) {
+		
+			for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
+				var e = DROPPED_ELEMENTS[i];
+				e.d = Math.sqrt(Math.pow(parseFloat(e.absX) - circle.absX, 2) + Math.pow(parseFloat(e.absY) - circle.absY, 2));
+			}
+			
+			DROPPED_ELEMENTS.sort(function(a, b) { return a.d < b.d; });
 
 			applyForce(++frame, circle, text, env);
 			if (atRest(circle, env)) break;
 		}
+		
+		console.log(DROPPED_ELEMENTS);
 		
 		DROPPED_ELEMENTS.push(circle);
 	}
@@ -489,12 +498,11 @@ function init(data, viewWidth, viewHeight) {
 		var atRest = 1.0 > Math.sqrt((Math.pow(circle.dx, 2) + Math.pow(circle.dy, 2)));
 		
 		var isSupported = false;
-		for (var i = DROPPED_ELEMENTS.length - 1; i >= 0; i--) {
+		for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
 			var other =  DROPPED_ELEMENTS[i];
 			var dx = circle.absX - parseFloat(other.absX);
 			var dy = circle.absY - parseFloat(other.absY)
 			var distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-			console.log(distance);
 			if (distance <= (circle.radius + parseFloat(other.radius))) {
 				isSupported = true;
 			}
@@ -505,7 +513,7 @@ function init(data, viewWidth, viewHeight) {
 	
 	function applyForce(frame, circle, text, env) {
 			
-		for (var i = DROPPED_ELEMENTS.length - 1; i >= 0; i--) {
+		for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
 			if (collision(frame, circle, text, env, DROPPED_ELEMENTS[i])) {
 				return;
 			}
@@ -519,7 +527,7 @@ function init(data, viewWidth, viewHeight) {
 		if (env.left >= (parseFloat(circle.absX) - circle.radius)) {
 
 			console.log("1");
-			debugger;
+			// debugger;
 		
 			var dx = circle.dx *= ((-1.0) * INELASTIC_COEFFICIENT);
 			var dy = circle.dy *= INELASTIC_COEFFICIENT; 
@@ -535,7 +543,7 @@ function init(data, viewWidth, viewHeight) {
 		else if (env.right <= (parseFloat(circle.absX) + circle.radius)) {
 			
 			console.log("2");
-			debugger;			
+			// debugger;			
 		
 			var dx = circle.dx *= ((-1.0) * INELASTIC_COEFFICIENT);
 			var dy = circle.dy *= INELASTIC_COEFFICIENT;
@@ -550,7 +558,7 @@ function init(data, viewWidth, viewHeight) {
 		else if (parseFloat(env.bottom) <= (parseFloat(circle.absY) + circle.radius)) {
 			
 			console.log("3");
- 			debugger;
+ 			// debugger;
  			
 			var dx = circle.dx *= INELASTIC_COEFFICIENT;
 			var dy = circle.dy *= (-1.0) * INELASTIC_COEFFICIENT;
@@ -560,7 +568,6 @@ function init(data, viewWidth, viewHeight) {
 				dy += distanceToFloor;
 			}
 			
-			debugger;
 			animateCollision(frame, dx, dy, circle, text, env); 
 		}
 		else if (other != null) {
@@ -568,7 +575,7 @@ function init(data, viewWidth, viewHeight) {
 			var speed = Math.sqrt(Math.pow(circle.dx, 2) + Math.pow(circle.dy, 2));
 			
 			console.log("4");
-			debugger;
+			// debugger;
 			
 			var dx, dy;
 			var xmag = parseFloat(circle.absX) - other.absX;
@@ -576,10 +583,14 @@ function init(data, viewWidth, viewHeight) {
 			var distance = Math.sqrt(Math.pow(xmag, 2) + Math.pow(ymag, 2));		
 			if (distance <= (parseFloat(circle.radius) + other.radius)) {
 				if (ymag != 0.0) {
-				
 					var theta = Math.atan(xmag/ymag);
 					dx = circle.dx = speed * INELASTIC_COEFFICIENT * Math.sin(theta) * -1.0;
 					dy = circle.dy = speed * INELASTIC_COEFFICIENT * Math.cos(theta) * -1.0;
+					
+					var mag = (parseFloat(circle.radius) + other.radius) - distance;
+					
+ 					dx += (parseFloat(mag)*Math.sin(theta) * -1.0);
+ 					dy += (parseFloat(mag)*Math.cos(theta) * -1.0);
 					
 				}
 				else {
