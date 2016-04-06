@@ -457,7 +457,7 @@ function init(data, viewWidth, viewHeight) {
 	// force functions
 	
 	var DROPPED_ELEMENTS = [];
-	var GRAVITY = 1.5;
+	var GRAVITY = 1.0;
 	function fall(g, lp, db) {
 		
 		var circle = g.selectAll("*")[0][0];
@@ -485,107 +485,142 @@ function init(data, viewWidth, viewHeight) {
 	}
 	
 	function atRest(circle, env) {
-		var atVertex = env.bottom <= (parseFloat(circle.absY) + circle.radius);
+		var atVertex = 1.0 > Math.abs(env.bottom - (parseFloat(circle.absY) + circle.radius));
 		var atRest = 1.0 > Math.sqrt((Math.pow(circle.dx, 2) + Math.pow(circle.dy, 2)));
 		return atVertex && atRest;
 	}
 	
 	function applyForce(frame, circle, text, env) {
 			
-		if (DROPPED_ELEMENTS.length == 0) {
-			collision(circle, env, null);
-		}
-		else {
-			for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
-				if (collision(circle, env, DROPPED_ELEMENTS[i])) {
-					break;
-				}
+		for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
+			if (collision(frame, circle, text, env, DROPPED_ELEMENTS[i])) {
+				return;
 			}
 		}
 		
-		animateCollision(frame, circle.dx, circle.dy, circle, text, env); 
+		collision(frame, circle, text, env, null);		
 	}
 	
-	function collision(circle, env, other) {
-		
-		var speed = 0.5 * Math.sqrt(Math.pow(circle.dx, 2) + Math.pow(circle.dy, 2))
-					
+	function collision(frame, circle, text, env, other) {
+	
 		if (env.left >= (parseFloat(circle.absX) - circle.radius)) {
+
 			console.log("1");
-			var theta = Math.atan(circle.dx/circle.dy);
-			circle.dx = speed * Math.sin(theta) * -1;
-			circle.dy = speed * Math.cos(theta);			
-			return true;
-		} else if (env.right <= (parseFloat(circle.absX) + circle.radius)) {
-			console.log("2");
-			var theta = Math.atan(circle.dx/circle.dy);
-			circle.dx = speed * Math.sin(theta) * -1;
-			circle.dy = speed * Math.cos(theta);
-			return true;
-		}
-		else if (parseFloat(env.bottom) <= (parseFloat(circle.absY) + circle.radius)) {
-				console.log("3");
-			if (circle.dx != 0) {
-				var theta = Math.atan(circle.dy/circle.dx);
-				circle.dx = speed * Math.cos(theta);
-				circle.dy = speed * Math.sin(theta);
-			}
-			else {
-				circle.dx = 0; // symmetry
-				circle.dy = speed * (-1.0);
+// 			debugger;
+		
+			var dx = circle.dx *= ((-1.0) * INELASTIC_COEFFICIENT);
+			var dy = circle.dy *= INELASTIC_COEFFICIENT; 
+			
+			var distanceToWall = env.left - (parseFloat(circle.absX) - circle.radius);
+			if (distanceToWall > 0) {
+				dx += distanceToWall;
 			}
 			
-			return true;
+			animateCollision(frame, dx, dy, circle, text, env); 
+			
+		} 
+		else if (env.right <= (parseFloat(circle.absX) + circle.radius)) {
+			
+			console.log("2");
+// 			debugger;			
+		
+			var dx = circle.dx *= ((-1.0) * INELASTIC_COEFFICIENT);
+			var dy = circle.dy *= INELASTIC_COEFFICIENT;
+
+			var distanceToWall = env.right - (parseFloat(circle.absX) + circle.radius)
+			if (distanceToWall < 0) {
+				dx += distanceToWall;
+			}
+			
+			animateCollision(frame, dx, dy, circle, text, env); 
+		}
+		else if (parseFloat(env.bottom) <= (parseFloat(circle.absY) + circle.radius)) {
+			
+			console.log("3");
+ // 			debugger;
+ 			
+			var dx = circle.dx *= INELASTIC_COEFFICIENT;
+			var dy = circle.dy *= (-1.0) * INELASTIC_COEFFICIENT;
+			
+			var distanceToFloor = env.bottom - (parseFloat(circle.absY) + circle.radius)
+			if (distanceToFloor < 0) {
+				dy += distanceToFloor;
+			}
+			
+// 			debugger;
+			animateCollision(frame, dx, dy, circle, text, env); 
 		}
 		else if (other != null) {
+			
+			var speed = Math.sqrt(Math.pow(circle.dx, 2) + Math.pow(circle.dy, 2));
+			
 			console.log("4");
-			var dx = parseFloat(circle.absX) - other.absX;
-			var dy = parseFloat(circle.absY) - other.absY;
-			var distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));		
+// 			debugger;
+			
+			var dx, dy;
+			var xmag = parseFloat(circle.absX) - other.absX;
+			var ymag = parseFloat(circle.absY) - other.absY;
+			var distance = Math.sqrt(Math.pow(xmag, 2) + Math.pow(ymag, 2));		
 			if (distance <= (parseFloat(circle.radius) + other.radius)) {
-				if (dx != 0) {
-					var theta = Math.atan(dx/dy);
-					circle.dx = speed * Math.sin(theta);
-					circle.dy = speed * Math.cos(theta);
+				if (ymag != 0.0) {
+				
+					var theta = Math.atan(xmag/ymag);
+					dx = circle.dx = speed * Math.sin(theta) * -1.0;
+					dy = circle.dy = speed * Math.cos(theta) * -1.0;
+					
 				}
 				else {
-					circle.dx = 0; // symmetry
-					circle.dy = speed * -1;
+					dx = circle.dx = circle.dx * 1.0; // symmetry
+					dy = circle.dy = 0.0;
 				}
 				
-				debugger;
-				return true;
+				animateCollision(frame, dx , dy, circle, text, env); 
 			}
 			else {
-				return false;
-			} 
+				
+				var dx, dy;
+				dx = circle.dx = parseFloat(circle.dx); // symmetry
+				dy = circle.dy += parseFloat(GRAVITY);
+
+				animateCollision(frame, dx, dy, circle, text, env); 
+			}
 		}
 		else {
 			console.log("5");
-			circle.dx = circle.dx; // symmetry
-			circle.dy += GRAVITY;
-			return false;
+			
+			var dx, dy;
+			dx = circle.dx = parseFloat(circle.dx); // symmetry
+			dy = circle.dy += parseFloat(GRAVITY);
+			
+			animateCollision(frame, dx, dy, circle, text, env); 
 		}
 	}
 		
 	function animateCollision(frame, dx, dy, circle, text, env) {
 
-		var targetX = parseFloat(circle.absX) + circle.dx;
-		var targetY = parseFloat(circle.absY) + circle.dy;
+		circle.absX += parseFloat(dx);
+		circle.absY += parseFloat(dy);
 
-		
-		if (targetX < env.left) {
-			circle.absX	+= (circle.dx += (parseFloat(circle.absX) - env.left));
-		} else if (targetX > env.right) {
-			circle.absX	+= (circle.dx += (parseFloat(env.right) - circle.absX));
-		}
-		else {
-			circle.absX	+= parseFloat(circle.dx);
-			circle.absY += parseFloat(circle.dy);
-		}
-		
-		var dx = parseFloat(circle.dx);
-		var dy = parseFloat(circle.dy);
+// 		else {
+// 			for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
+// 				var other = DROPPED_ELEMENTS[i];
+// 				var xmag = parseFloat(circle.absX) - other.absX;
+// 				var ymag = parseFloat(circle.absY) - other.absY;
+// 				var distance = Math.sqrt(Math.pow(xmag, 2) + Math.pow(ymag, 2));		
+// 				if (distance <= (parseFloat(circle.radius) + other.radius)) {
+// 					if(xmag != 0.0) {
+// 						var theta = Math.atan(ymag/xmag)
+// 						dx = Math.sin(theta) * (parseFloat(circle.radius) + other.radius) * -1;
+// 						dy = Math.cos(theta) * (parseFloat(circle.radius) + other.radius) * -1;
+// 					}
+// 					else {
+// 						dx = 0.0
+// 						dy = (parseFloat(circle.radius) + other.radius) * -1;
+// 					}
+// 				}
+// 			}
+// 		}
+			
 		setTimeout(function() {
 			var current = getCurrentTranslation(circle);
 			var x = parseFloat(current.x) + dx;
