@@ -110,7 +110,7 @@
 <script src="node_modules/underscore/underscore.js"></script>
 <script>
 
-var INELASTIC_COEFFICIENT = 0.5;
+var INELASTIC_COEFFICIENT = 0.33;
 var CIRCLE_PADDING_FACTOR = 13.0;
 var COLLISION_FACTOR = 0.2;
 var MIN_RADIUS_FACTOR = 0.00002;
@@ -457,7 +457,8 @@ function init(data, viewWidth, viewHeight) {
 	// force functions
 	
 	var DROPPED_ELEMENTS = [];
-	var GRAVITY = 1.0;
+	var GRAVITY = 2.0;
+	var FRAMES_PER_SECOND = 60;
 	function fall(g, lp, db) {
 		
 		var circle = g.selectAll("*")[0][0];
@@ -472,23 +473,23 @@ function init(data, viewWidth, viewHeight) {
 		circle.absX = (circle.getBoundingClientRect().left + window.scrollX) + (circle.getBoundingClientRect().width/2);
 		circle.radius = parseFloat(circle.getAttribute("r"));
 		circle.dx = 0;
-		circle.dy = GRAVITY;
+		circle.dy = 0;
 		
-		var frame = 0;	
-		while (true) {
-		
-			for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
-				var e = DROPPED_ELEMENTS[i];
-				e.d = Math.sqrt(Math.pow(parseFloat(e.absX) - circle.absX, 2) + Math.pow(parseFloat(e.absY) - circle.absY, 2));
-			}
-			
-			DROPPED_ELEMENTS.sort(function(a, b) { return a.d < b.d; });
-
-			applyForce(++frame, circle, text, env);
-			if (atRest(circle, env)) break;
+		var frame = 0;
+		for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
+			var e = DROPPED_ELEMENTS[i];
+			e.d = Math.sqrt(Math.pow(parseFloat(e.absX) - circle.absX, 2) + Math.pow(parseFloat(e.absY) - circle.absY, 2));
 		}
 		
-		console.log(DROPPED_ELEMENTS);
+		DROPPED_ELEMENTS.sort(function(a, b) { return a.d < b.d; });
+	
+		// only allow 3 second animations
+		while (frame < (FRAMES_PER_SECOND * 3)) {
+		
+			applyForce(++frame, circle, text, env);
+		
+			if (atRest(circle, env)) break;			
+		}
 		
 		DROPPED_ELEMENTS.push(circle);
 	}
@@ -503,7 +504,7 @@ function init(data, viewWidth, viewHeight) {
 			var dx = circle.absX - parseFloat(other.absX);
 			var dy = circle.absY - parseFloat(other.absY)
 			var distance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-			if (distance <= (circle.radius + parseFloat(other.radius))) {
+			if (distance <= (circle.radius + parseFloat(other.radius)) + 1.0) {
 				isSupported = true;
 			}
 		}
@@ -512,14 +513,19 @@ function init(data, viewWidth, viewHeight) {
 	}
 	
 	function applyForce(frame, circle, text, env) {
-			
-		for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
-			if (collision(frame, circle, text, env, DROPPED_ELEMENTS[i])) {
-				return;
+		if (DROPPED_ELEMENTS.length == 0) {
+					collision(frame, circle, text, env, null); // applying gravity
+		}	
+		else {
+			for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
+				if (collision(frame, circle, text, env, DROPPED_ELEMENTS[i])) {
+					return;
+				}
 			}
+			
+			// no collision with dropped elements
+			collision(frame, circle, text, env, null); // applying gravity
 		}
-		
-		collision(frame, circle, text, env, null);		
 	}
 	
 	function collision(frame, circle, text, env, other) {
@@ -527,7 +533,7 @@ function init(data, viewWidth, viewHeight) {
 		if (env.left >= (parseFloat(circle.absX) - circle.radius)) {
 
 			console.log("1");
-			// debugger;
+ 			// debugger;
 		
 			var dx = circle.dx *= ((-1.0) * INELASTIC_COEFFICIENT);
 			var dy = circle.dy *= INELASTIC_COEFFICIENT; 
@@ -538,6 +544,8 @@ function init(data, viewWidth, viewHeight) {
 			}
 			
 			animateCollision(frame, dx, dy, circle, text, env); 
+			
+			return true;
 			
 		} 
 		else if (env.right <= (parseFloat(circle.absX) + circle.radius)) {
@@ -554,11 +562,13 @@ function init(data, viewWidth, viewHeight) {
 			}
 			
 			animateCollision(frame, dx, dy, circle, text, env); 
+			
+			return true;
 		}
 		else if (parseFloat(env.bottom) <= (parseFloat(circle.absY) + circle.radius)) {
 			
 			console.log("3");
- 			// debugger;
+			// debugger;
  			
 			var dx = circle.dx *= INELASTIC_COEFFICIENT;
 			var dy = circle.dy *= (-1.0) * INELASTIC_COEFFICIENT;
@@ -569,19 +579,21 @@ function init(data, viewWidth, viewHeight) {
 			}
 			
 			animateCollision(frame, dx, dy, circle, text, env); 
+			
+			return true;
 		}
 		else if (other != null) {
 			
 			var speed = Math.sqrt(Math.pow(circle.dx, 2) + Math.pow(circle.dy, 2));
 			
 			console.log("4");
-			// debugger;
 			
 			var dx, dy;
 			var xmag = parseFloat(circle.absX) - other.absX;
 			var ymag = parseFloat(circle.absY) - other.absY;
 			var distance = Math.sqrt(Math.pow(xmag, 2) + Math.pow(ymag, 2));		
 			if (distance <= (parseFloat(circle.radius) + other.radius)) {
+							// debugger;
 				if (ymag != 0.0) {
 					var theta = Math.atan(xmag/ymag);
 					dx = circle.dx = speed * INELASTIC_COEFFICIENT * Math.sin(theta) * -1.0;
@@ -599,24 +611,23 @@ function init(data, viewWidth, viewHeight) {
 				}
 				
 				animateCollision(frame, dx , dy, circle, text, env); 
+				
+				return true;
 			}
 			else {
-				
-				var dx, dy;
-				dx = circle.dx = parseFloat(circle.dx); // symmetry
-				dy = circle.dy += parseFloat(GRAVITY);
-
-				animateCollision(frame, dx, dy, circle, text, env); 
+				return false;
 			}
 		}
 		else {
 			console.log("5");
-			
+
 			var dx, dy;
 			dx = circle.dx = parseFloat(circle.dx); // symmetry
 			dy = circle.dy += parseFloat(GRAVITY);
-			
+						
 			animateCollision(frame, dx, dy, circle, text, env); 
+			
+			return true;
 		}
 	}
 		
@@ -631,7 +642,7 @@ function init(data, viewWidth, viewHeight) {
 			var y = parseFloat(current.y) + dy;			
 			circle.setAttribute("transform", "translate(" + x + "," + y + ")");
 			text.setAttribute("transform", "translate(" + x + "," + y + ")");
-		}, frame * 60);
+		}, frame * FRAMES_PER_SECOND);
 	}	
 	
 	// end force functions
