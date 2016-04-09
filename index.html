@@ -6,7 +6,7 @@
 	<style>
 	
 	button {
-		z-index=10001;
+		z-index:10001;
 	}
 		body {
 			margin:40px;
@@ -18,9 +18,9 @@
 		}
 		
 		#box {
-		width:100%;
-		height:100%;
-			z-index 1000;
+			width:100%;
+			height:100%;
+			z-index:1000;
 		}
 		
 		#container {
@@ -40,10 +40,43 @@
 		position:absolute;
 			top:0px;
 			right:0;
-			width:0%;
+			width:25%;
 			height:100%;
 			background-color: black;
 			transition: width 500ms ease;
+		}
+		
+		#compTab {
+			margin: 10px;
+			font-size: 24px;
+			color: white;
+			border: 1px solid yellow;
+			z-index:1000;
+			width: 100%;
+			height: auto;
+		}
+
+		
+		td {
+			padding: 5px;
+			border-bottom: 1px solid black;
+		}
+		
+		td.update {
+			color: blue;
+		}
+		
+		td.enter {
+			color:green;
+		}
+		
+		td.exit, tr.exit td {
+			color: red;
+		}
+		
+		td.row-header {
+			border-right:1px solid black;
+			font-weight: bold;
 		}
 		
 		svg {
@@ -100,7 +133,7 @@
 <div id="container">
 	<div id="content"></div>
 	<div id="compare">
-		<button>BTN</button>
+		<table></table>
 		<svg id="boxout"><g id="box"></svg>
 	</div>
 </div>
@@ -410,7 +443,7 @@ function init(data, viewWidth, viewHeight) {
 	// drag functions
 	
 	function dragstarted(d) {
-		$("#compare").width("20%");
+		$("#compare").width("25%");
 		d3.event.sourceEvent.stopPropagation();
 		d3.select(this).classed("dragging", true);
 	}
@@ -429,6 +462,10 @@ function init(data, viewWidth, viewHeight) {
 	}
 	
 	function dragended(d) {
+	
+		var tableModel = addToTableModel(d);
+		update(tableModel);
+		
 		var dropBox = d3.select("#compare").node().getBoundingClientRect();
 		
 		var lastPosition = lastDragged.pop(); // get last position
@@ -441,15 +478,109 @@ function init(data, viewWidth, viewHeight) {
 			
 			fall(g, lastPosition, dropBox);
 			
-			d3.select("#compare").style("background-color", "green");			
 			
 		}
 		else {
-			d3.select("#compare").style("background-color", "red");
 			d3.select(this).selectAll("*").transition().duration(500).attr("transform", "translate(0,0)");
 		}
 	
 		d3.select(this).classed("dragging", false);
+	}
+	
+	/*
+	 * Table logic
+	 */
+
+	var NAMES = [];
+	var ATTRS = [];
+	function addToTableModel(d) {
+		
+		NAMES.push(d.NM);
+		ATTRS.push(extractRowData(d));
+		
+		var n = NAMES.length;
+		var d = [], v, k;
+		for (var i = 0; i < n; i++) {
+			v = ATTRS[i];
+			k = NAMES[i];
+			d.push(makeKeyVal(k, v));
+		}
+		
+		return d;
+	}
+			
+	function makeKeyVal(k, v) {
+		return { key: k, value: v};
+	}
+	
+	var extractRowData = function(d) {
+		return [ d.ETHCTY, d.GNDR, d.CNT, d.RNK ];
+	}
+	
+	var convertRowData = function(d) {
+		var values = d.value.slice();
+		
+		values.unshift(d.key);
+		
+		return values;
+	}
+	
+	var getKey = function(d) { return d && d.key };
+	
+	var ident = function(d) { return d; };
+	
+	var update = function(newData) {
+			
+		var table = d3.select('table');
+			
+		var rows = table.selectAll('tr').data(newData, getKey);
+		
+		var cells = rows.selectAll('td').data(convertRowData);
+		
+		cells.attr('class', 'update');
+	
+		cells.enter().append('td')
+			.style('opacity', 0.0)
+			.attr('class', 'enter')
+			.transition()
+			.delay(900)
+			.duration(500)
+			.style('opacity', 1.0);
+		
+		cells.text(ident);
+		
+		cells.exit()
+			.attr('class', 'exit')
+			.transition()
+			.delay(200)
+			.duration(500)
+			.style('opacity', 0.0)
+			.remove();
+			
+		var cellsInNewRows = rows.enter().append('tr')
+								.selectAll('td')
+								.data(convertRowData);
+
+		cellsInNewRows.enter().append('td')
+			.style('opacity', 0.0)
+			.attr('class', 'enter')
+			.transition()
+			.delay(900)
+			.duration(500)
+			.style('opacity', 1.0);
+			
+		cellsInNewRows.text(ident);
+			
+		rows.exit()
+			.attr('class', 'exit')
+			.transition()
+			.delay(200)
+			.duration(500)
+			.style('opacity', 0.0)
+			.remove();
+		
+
+		table.selectAll('tr').select('td').classed('row-header', true);
 	}
 	
 	// end drag functions
