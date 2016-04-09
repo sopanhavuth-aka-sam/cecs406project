@@ -8,6 +8,28 @@
 	button {
 		z-index:10001;
 	}
+	
+	
+	.bar {
+		fill: steelblue;
+	}
+	
+	.axis text {
+		font: 10px sans-serif;
+		color: white;
+	}
+	
+	.axis path,
+	.axis line {
+		fill: none;
+		stroke: #000;
+		shape-rendering: crispEdges;
+	}
+	
+	.x.axis path {
+		display:none;
+	}
+	
 		body {
 			margin:40px;
 		}
@@ -63,7 +85,7 @@
 		}
 		
 		td.update {
-			color: blue;
+			color: white;
 		}
 		
 		td.enter {
@@ -133,7 +155,7 @@
 <div id="container">
 	<div id="content"></div>
 	<div id="compare">
-		<table></table>
+		<div id="chartSpace"></div>
 		<svg id="boxout"><g id="box"></svg>
 	</div>
 </div>
@@ -171,7 +193,71 @@ function reset() {
 }
 	
 function init(data, viewWidth, viewHeight) {
+			
+			var NAMES = [];
+							
+			var margin = { top: 10, right: 10, bottom: 10, left: 10},
+			width = 200 - margin.left - margin.right,
+			height = 200 - margin.top - margin.bottom;
+			
+			var x = d3.scale.ordinal()
+				.rangeRoundBands([0, width], 0.1);
 				
+			var y = d3.scale.linear()
+				.range([height, 0]);
+				
+			var xAxis = d3.svg.axis()
+				.scale(x)
+				.orient("bottom");
+				
+			var yAxis = d3.svg.axis()
+				.scale(y)
+				.orient("left");
+		
+			
+		function updateChart(nms) {
+
+			d3.select(".chart").remove();
+					
+			var chart = d3.select("#chartSpace").append("svg").attr("class", "chart")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");		
+				
+			chart.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + height + ")")
+				.call(xAxis);
+				
+			chart.append("g")
+				.attr("class", "y axis")
+				.call(yAxis);
+				
+			x.domain(nms.map(function(d) { return d.NM; }));	
+			
+			y.domain([0, d3.max(data, function(d) { return parseInt(d.CNT); })]);
+				
+			var cd = chart.selectAll(".bar")
+				.data(nms);
+				
+			cd.enter().append("rect")
+				.attr("class", "bar")
+				.attr("x", function(d) { return x(d.NM); })
+				.attr("y", function(d) { return y(parseInt(d.CNT)); })
+				.attr("height", function(d) { return height - y(parseInt(d.CNT)); })
+				.attr("width", x.rangeBand());
+			
+			}
+			
+					
+			
+			/*
+			 * end chart
+			 */
+			 
+			 
+			 
 	// hacking
 	var scaleSVG = d3.select('#content').append("svg");
 	var scale = scaleSVG[0][0].currentScale;
@@ -462,9 +548,13 @@ function init(data, viewWidth, viewHeight) {
 	}
 	
 	function dragended(d) {
-	
-		var tableModel = addToTableModel(d);
-		update(tableModel);
+
+
+		NAMES.push(d);
+		updateChart(NAMES);
+			
+// 		var tableModel = addToTableModel(d);
+// 		update(tableModel);
 		
 		var dropBox = d3.select("#compare").node().getBoundingClientRect();
 		
@@ -662,9 +752,6 @@ function init(data, viewWidth, viewHeight) {
 	function collision(frame, circle, text, env, other) {
 	
 		if (env.left >= (parseFloat(circle.absX) - circle.radius)) {
-
-			console.log("1");
- 			// debugger;
 		
 			var dx = circle.dx *= ((-1.0) * INELASTIC_COEFFICIENT);
 			var dy = circle.dy *= INELASTIC_COEFFICIENT; 
@@ -680,9 +767,6 @@ function init(data, viewWidth, viewHeight) {
 			
 		} 
 		else if (env.right <= (parseFloat(circle.absX) + circle.radius)) {
-			
-			console.log("2");
-			// debugger;			
 		
 			var dx = circle.dx *= ((-1.0) * INELASTIC_COEFFICIENT);
 			var dy = circle.dy *= INELASTIC_COEFFICIENT;
@@ -697,10 +781,7 @@ function init(data, viewWidth, viewHeight) {
 			return true;
 		}
 		else if (parseFloat(env.bottom) <= (parseFloat(circle.absY) + circle.radius)) {
-			
-			console.log("3");
-			// debugger;
- 			
+			 			
 			var dx = circle.dx *= INELASTIC_COEFFICIENT;
 			var dy = circle.dy *= (-1.0) * INELASTIC_COEFFICIENT;
 			
@@ -716,9 +797,7 @@ function init(data, viewWidth, viewHeight) {
 		else if (other != null) {
 			
 			var speed = Math.sqrt(Math.pow(circle.dx, 2) + Math.pow(circle.dy, 2));
-			
-			console.log("4");
-			
+
 			var dx, dy;
 			var xmag = parseFloat(circle.absX) - other.absX;
 			var ymag = parseFloat(circle.absY) - other.absY;
@@ -750,8 +829,7 @@ function init(data, viewWidth, viewHeight) {
 			}
 		}
 		else {
-			console.log("5");
-
+		
 			var dx, dy;
 			dx = circle.dx = parseFloat(circle.dx); // symmetry
 			dy = circle.dy += parseFloat(GRAVITY);
