@@ -200,7 +200,7 @@ function init(data, viewWidth, viewHeight) {
 			
 			console.log(compareBox);
 					
-			var margin = { top: 20, right: 20, bottom: 30, left: 60},
+			var margin = { top: 20, right: 20, bottom: 30, left: 70},
 			width = compareBox.width - margin.left - margin.right,
 			height = (	compareBox.height*0.50) - margin.top - margin.bottom;
 			
@@ -217,7 +217,8 @@ function init(data, viewWidth, viewHeight) {
 			var yAxis = d3.svg.axis()
 				.scale(y)
 				.orient("bottom")
-				.tickValues(d3.range(0, d3.max(data, function(d) { return parseInt(d.CNT);}), 100)); 
+				.tickValues([0, d3.max(data, function(d) { return parseInt(d.CNT); })])
+				.tickFormat(function(d) { if (d == 0) return "min"; else return "max" }); 
 		
 			
 		function updateChart(nms) {
@@ -251,7 +252,8 @@ function init(data, viewWidth, viewHeight) {
 				.attr("y", function(d) { return x(d.NM); })
 				.attr("x", function(d) { return 0; })
 				.attr("width", function(d) { return y(parseInt(d.CNT)); })
-				.attr("height", x.rangeBand());
+				.attr("height", x.rangeBand())
+				.attr("style", function(d) { return d.color; });
 			
 			}
 			
@@ -555,6 +557,9 @@ function init(data, viewWidth, viewHeight) {
 	function dragended(d) {
 
 
+		var c = d3.select(this).select("circle").attr("style");
+		
+		d.color = c;
 		NAMES.push(d);
 		updateChart(NAMES);
 			
@@ -587,97 +592,6 @@ function init(data, viewWidth, viewHeight) {
 	 */
 
 	var NAMES = [];
-	var ATTRS = [];
-	function addToTableModel(d) {
-		
-		NAMES.push(d.NM);
-		ATTRS.push(extractRowData(d));
-		
-		var n = NAMES.length;
-		var d = [], v, k;
-		for (var i = 0; i < n; i++) {
-			v = ATTRS[i];
-			k = NAMES[i];
-			d.push(makeKeyVal(k, v));
-		}
-		
-		return d;
-	}
-			
-	function makeKeyVal(k, v) {
-		return { key: k, value: v};
-	}
-	
-	var extractRowData = function(d) {
-		return [ d.ETHCTY, d.GNDR, d.CNT, d.RNK ];
-	}
-	
-	var convertRowData = function(d) {
-		var values = d.value.slice();
-		
-		values.unshift(d.key);
-		
-		return values;
-	}
-	
-	var getKey = function(d) { return d && d.key };
-	
-	var ident = function(d) { return d; };
-	
-	var update = function(newData) {
-			
-		var table = d3.select('table');
-			
-		var rows = table.selectAll('tr').data(newData, getKey);
-		
-		var cells = rows.selectAll('td').data(convertRowData);
-		
-		cells.attr('class', 'update');
-	
-		cells.enter().append('td')
-			.style('opacity', 0.0)
-			.attr('class', 'enter')
-			.transition()
-			.delay(900)
-			.duration(500)
-			.style('opacity', 1.0);
-		
-		cells.text(ident);
-		
-		cells.exit()
-			.attr('class', 'exit')
-			.transition()
-			.delay(200)
-			.duration(500)
-			.style('opacity', 0.0)
-			.remove();
-			
-		var cellsInNewRows = rows.enter().append('tr')
-								.selectAll('td')
-								.data(convertRowData);
-
-		cellsInNewRows.enter().append('td')
-			.style('opacity', 0.0)
-			.attr('class', 'enter')
-			.transition()
-			.delay(900)
-			.duration(500)
-			.style('opacity', 1.0);
-			
-		cellsInNewRows.text(ident);
-			
-		rows.exit()
-			.attr('class', 'exit')
-			.transition()
-			.delay(200)
-			.duration(500)
-			.style('opacity', 0.0)
-			.remove();
-		
-
-		table.selectAll('tr').select('td').classed('row-header', true);
-	}
-	
 	// end drag functions
 	
 	// force functions
