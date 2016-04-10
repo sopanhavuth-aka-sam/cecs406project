@@ -10,10 +10,30 @@
 	position:absolute;
 	top:40px;
 	left:20px;
+	width:200px;
 	z-index:99999;
 	border:1px solid black;
 	}
 	
+	.plabel {
+		width:45%;
+		text-align: right;
+		padding-right:5%;
+		display:inline-block;
+	}
+	
+	#rangeDiv {
+		width:80%;
+		margin:auto;
+		text-align:center;
+	}
+		
+		
+	#spimg {
+		width: 60px;
+		display:block;
+		margin: 20px auto;
+	}
 	
 	.bar {
 		fill: steelblue;
@@ -151,10 +171,29 @@
 	</head>
 <body>
 <div id="legend">
-	<button class="btn" id="all">All</button>
-	<button class="btn" id="ETHCTY">Ethnicity</button>
-	<button class="btn" id="GNDR">Gender</button>
-	<button class="btn" id="SORT">Sort</button>
+	<div>
+		<p class="plabel">Group By:</p>
+		<select id="groupSelect">
+			<option value="none">None</option>		
+			<option value="gender">Gender</option>
+			<option value="ethnicity">Ethnicity</option>
+		</select>
+		</div>
+	<div>
+		<p class="plabel">Color By:</p>
+		<select id="colorSelect">
+			<option value="none">None</option>		
+			<option value="gender">Gender</option>
+			<option value="ethnicity">Ethnicity</option>
+		</select>
+	</div>
+	<div id="rangeDiv">
+		<p id="rlabel">Scope:</p>
+		<input type="range">
+	</div>
+	<div>
+		<img id="spimg" src="spiral.png">
+	</div>
 </div>
 <div id="container">
 	<div id="content"></div>
@@ -321,14 +360,18 @@ function init(data, viewWidth, viewHeight) {
 		case "ETHCTY":
 			draw(this.id, data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 			break;
-		case "SORT":
-			sort(gravityEnter[0], spiralEnter);
-			break;
 		default:
 			console.log("DEFAULT!");
 		}
 	});
 	
+	$("#spimg").mouseenter(function() {
+			sort(gravityEnter[0], spiralEnter);
+	});
+
+	$("#spimg").mouseleave(function() {
+			draw("ALL", data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
+	});	
 	draw('all', data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	
 	/*
