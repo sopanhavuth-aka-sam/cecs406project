@@ -5,8 +5,13 @@
 	<title> NYC Baby Names</title>
 	<style>
 	
-	button {
-		z-index:10001;
+	
+	#legend {
+	position:absolute;
+	top:40px;
+	left:20px;
+	z-index:99999;
+	border:1px solid black;
 	}
 	
 	
@@ -145,12 +150,11 @@
 		</style>
 	</head>
 <body>
-<div>
+<div id="legend">
 	<button class="btn" id="all">All</button>
 	<button class="btn" id="ETHCTY">Ethnicity</button>
 	<button class="btn" id="GNDR">Gender</button>
 	<button class="btn" id="SORT">Sort</button>
-	<button class="btn" id="PANOUT">-</button>
 </div>
 <div id="container">
 	<div id="content"></div>
@@ -166,9 +170,9 @@
 <script>
 
 var INELASTIC_COEFFICIENT = 0.4;
-var CIRCLE_PADDING_FACTOR = 13.0;
+var CIRCLE_PADDING_FACTOR = 6.0;
 var COLLISION_FACTOR = 0.2;
-var MIN_RADIUS_FACTOR = 0.00002;
+var MIN_RADIUS_FACTOR = 0.00003;
 var MAX_RADIUS_FACTOR = 0.00006;
 var STANDARD_FONT_SIZE = 9;
 
@@ -324,7 +328,7 @@ function init(data, viewWidth, viewHeight) {
 		}
 	});
 	
-	draw('GNDR', data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
+	draw('all', data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	
 	/*
 	 * Begin Functions
@@ -333,9 +337,9 @@ function init(data, viewWidth, viewHeight) {
 		
 			data = _.sortBy(data, function(node) { return parseInt(node.RNK) });
 		
-			var minRadius = Math.ceil(viewWidth*viewHeight*MIN_RADIUS_FACTOR*scale);	
-			var maxRadius = Math.floor(viewWidth*viewHeight*MAX_RADIUS_FACTOR*scale);
-
+			var minRadius = Math.ceil(viewWidth*viewHeight*MIN_RADIUS_FACTOR);	
+			var maxRadius = Math.floor(viewWidth*viewHeight*MAX_RADIUS_FACTOR);
+			
 			var currentScreenCapacity = 0;
 			var totalScreenCapacity = (Math.pow(d3.min([viewWidth, viewHeight]), 2)) / (Math.pow(maxRadius, 2) * (scale*CIRCLE_PADDING_FACTOR));
 	
@@ -353,10 +357,10 @@ function init(data, viewWidth, viewHeight) {
 				
 					// update counts
 					var cnt = parseInt(d.CNT);
-					if (cnt > parseInt(data.maxCnt)) {
+					if (cnt > parseInt(maxCnt)) {
 						maxCnt = cnt;
 					}			
-					if (cnt < parseInt(data.minCnt)) {
+					if (cnt < parseInt(minCnt)) {
 						minCnt = cnt;
 					}
 				}
@@ -373,7 +377,7 @@ function init(data, viewWidth, viewHeight) {
 				.range(radiusOutputRange);
 			
 			for (var j = 0; j < data.length; j++) {	
-				data[j].radius = circleRadiusScale(data[j].CNT);
+				data[j].radius = circleRadiusScale(parseInt(data[j].CNT));
 			}
 		
 			return data;
@@ -506,12 +510,22 @@ function init(data, viewWidth, viewHeight) {
 	
 	function sort(list, spiralEnter) {
 	
+				gravitySVG.selectAll(".label").remove();
 		d3.select(".spiral").transition().style("opacity", "1");
-	
+		
+		list.sort(function(a, b) { 
+			return parseInt(a.__data__.CNT) - parseInt(b.__data__.CNT); 
+		});
+		
+		
+
+
 		// ask path for length
 		var spiralLength = spiralEnter.node().getTotalLength();
 		var spiralPadding = spiralLength / list.length;
 		for (var i = 0; i < list.length; i++) {
+			console.log(list[i].__data__.CNT);
+			
 			var spiralPoint = spiralEnter.node().getPointAtLength(i * spiralPadding);
 			var g = list[i];
 			var gi = g.getElementsByTagName("g")[0];
@@ -633,7 +647,7 @@ function init(data, viewWidth, viewHeight) {
 			e.d = Math.sqrt(Math.pow(parseFloat(e.absX) - circle.absX, 2) + Math.pow(parseFloat(e.absY) - circle.absY, 2));
 		}
 		
-		DROPPED_ELEMENTS.sort(function(a, b) { return a.d < b.d; });
+		DROPPED_ELEMENTS.sort(function(a, b) { return a.d - b.d; });
 	
 		// only allow 3 second animations
 		while (frame < (FRAMES_PER_SECOND * 3)) {
@@ -815,11 +829,12 @@ function init(data, viewWidth, viewHeight) {
 		gravitySVG.selectAll(".label")
 			.data(centers).enter().append("text")
 			.attr("class", "label")
-			.text(function (d) { return d.name })
+			.text(function (d) { console.log(d.name); if (d.name != "ALL") return d.name; else return ""; })
 			.attr("fill", "black")
 			.style("font-size", 30 / scale)
 			.attr("transform", function (d) {
-				return "translate(" + (d.x - ((d.name.length)*3)) + ", " + (d.y - d.r + (50 / scale)) + ")";
+				if (d.name == "ALL") return "";
+				else return "translate(" + (d.x - ((d.name.length)*3)) + ", " + (d.y - d.r + (50 / scale)) + ")";
 			});
 	}
 	
