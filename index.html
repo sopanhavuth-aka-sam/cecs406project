@@ -22,7 +22,7 @@
 		display:inline-block;
 	}
 	
-	#rangeDiv {
+	#rangeDiv, #sortDiv {
 		width:80%;
 		margin:auto;
 		text-align:center;
@@ -188,10 +188,11 @@
 		</select>
 	</div>
 	<div id="rangeDiv">
-		<p id="rlabel">Scope:</p>
-		<input type="range">
+		<p>Scope:</p>
+		<input id="scopeRange" value="7.5" type="range" min="1.0" max="15.0" step="1.0">
 	</div>
-	<div>
+	<div id="sortDiv">
+		<p>Sort:</p>
 		<img id="spimg" src="spiral.png">
 	</div>
 </div>
@@ -209,8 +210,8 @@
 <script>
 
 var INELASTIC_COEFFICIENT = 0.4;
-var CIRCLE_PADDING_FACTOR = 6.0;
 var COLLISION_FACTOR = 0.2;
+var DEFAULT_CIRCLE_PADDING_FACTOR = 6.0;
 var MIN_RADIUS_FACTOR = 0.00003;
 var MAX_RADIUS_FACTOR = 0.00006;
 var STANDARD_FONT_SIZE = 9;
@@ -220,18 +221,18 @@ var FILLS = [
 	['#86AFF2','#EE8482'] // female, male
 ];
 
-var redraw = function() { 
+var redraw = function(cpf) { 
 	d3.csv("clean.csv", function(error, data) {
 	
 		reset();
 		
-		init(data, window.innerWidth, window.innerHeight);
+		init(data, window.innerWidth, window.innerHeight, cpf);
 	
 	}); // End xml callback.
 }	
 	
-$(window).resize(redraw);
-$(document).ready(redraw);
+$(window).resize(redraw(DEFAULT_CIRCLE_PADDING_FACTOR));
+$(document).ready(redraw(DEFAULT_CIRCLE_PADDING_FACTOR));
 	
 function reset() {
 	var contentRoot = document.getElementById("content");
@@ -240,8 +241,9 @@ function reset() {
 	}
 }
 	
-function init(data, viewWidth, viewHeight) {
+function init(data, viewWidth, viewHeight, cpf) {
 			
+		var CIRCLE_PADDING_FACTOR = cpf;
 			var NAMES = [];
 		
 			
@@ -364,13 +366,17 @@ function init(data, viewWidth, viewHeight) {
 			console.log("DEFAULT!");
 		}
 	});
-	
+
+	$("#scopeRange").on("change", function() {
+ 		redraw(($(this).val()));
+	});
+		
 	$("#spimg").mouseenter(function() {
 			sort(gravityEnter[0], spiralEnter);
 	});
 
 	$("#spimg").mouseleave(function() {
-			draw("ALL", data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
+			draw("all", data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	});	
 	draw('all', data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	
