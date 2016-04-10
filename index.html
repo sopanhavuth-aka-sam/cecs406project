@@ -165,7 +165,7 @@
 <script src="node_modules/underscore/underscore.js"></script>
 <script>
 
-var INELASTIC_COEFFICIENT = 0.33;
+var INELASTIC_COEFFICIENT = 0.4;
 var CIRCLE_PADDING_FACTOR = 13.0;
 var COLLISION_FACTOR = 0.2;
 var MIN_RADIUS_FACTOR = 0.00002;
@@ -214,7 +214,8 @@ function init(data, viewWidth, viewHeight) {
 				
 			var xAxis = d3.svg.axis()
 				.scale(x)
-				.orient("left");
+				.orient("left")
+				.tickFormat(function(d) { return d.split(",")[0]; });
 				
 			var yAxis = d3.svg.axis()
 				.scale(y)
@@ -230,7 +231,7 @@ function init(data, viewWidth, viewHeight) {
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");		
 				
-			x.domain(nms.map(function(d) { return d.NM; }));	
+			x.domain(nms.map(function(d) { return d.NM + "," + d.ETHCTY + "," + d.GNDR; }));	
 			
 			y.domain([0, d3.max(data, function(d) { return parseInt(d.CNT); })]);
 			
@@ -260,7 +261,7 @@ function init(data, viewWidth, viewHeight) {
 				
 			cd.enter().append("rect")
 				.attr("class", "bar")
-				.attr("y", function(d) { return x(d.NM); })
+				.attr("y", function(d) { return x(d.NM + "," + d.ETHCTY + "," + d.GNDR); })
 				.attr("x", function(d) { return 0; })
 				.attr("width", function(d) { return y(parseInt(d.CNT)); })
 				.attr("height", x.rangeBand())
