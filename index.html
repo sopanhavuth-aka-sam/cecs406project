@@ -16,13 +16,13 @@
 	
 	.axis text {
 		font: 10px sans-serif;
-		color: white;
+		fill: white;
 	}
 	
 	.axis path,
 	.axis line {
 		fill: none;
-		stroke: #000;
+		stroke: white;
 		shape-rendering: crispEdges;
 	}
 	
@@ -195,24 +195,29 @@ function reset() {
 function init(data, viewWidth, viewHeight) {
 			
 			var NAMES = [];
-							
-			var margin = { top: 10, right: 10, bottom: 10, left: 10},
-			width = 200 - margin.left - margin.right,
-			height = 200 - margin.top - margin.bottom;
+					
+			var compareBox = d3.select("#compare").node().getBoundingClientRect();
+			
+			console.log(compareBox);
+					
+			var margin = { top: 20, right: 20, bottom: 30, left: 60},
+			width = compareBox.width - margin.left - margin.right,
+			height = (	compareBox.height*0.50) - margin.top - margin.bottom;
 			
 			var x = d3.scale.ordinal()
-				.rangeRoundBands([0, width], 0.1);
+				.rangeRoundBands([0, height], 0.1);
 				
 			var y = d3.scale.linear()
-				.range([height, 0]);
+				.range([0, width]);
 				
 			var xAxis = d3.svg.axis()
 				.scale(x)
-				.orient("bottom");
+				.orient("left");
 				
 			var yAxis = d3.svg.axis()
 				.scale(y)
-				.orient("left");
+				.orient("bottom")
+				.tickValues(d3.range(0, d3.max(data, function(d) { return parseInt(d.CNT);}), 100)); 
 		
 			
 		function updateChart(nms) {
@@ -225,28 +230,28 @@ function init(data, viewWidth, viewHeight) {
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");		
 				
+			x.domain(nms.map(function(d) { return d.NM; }));	
+			
+			y.domain([0, d3.max(data, function(d) { return parseInt(d.CNT); })]);
+			
 			chart.append("g")
 				.attr("class", "x axis")
-				.attr("transform", "translate(0," + height + ")")
 				.call(xAxis);
 				
 			chart.append("g")
 				.attr("class", "y axis")
+				.attr("transform", "translate(0," + height + ")")
 				.call(yAxis);
-				
-			x.domain(nms.map(function(d) { return d.NM; }));	
-			
-			y.domain([0, d3.max(data, function(d) { return parseInt(d.CNT); })]);
 				
 			var cd = chart.selectAll(".bar")
 				.data(nms);
 				
 			cd.enter().append("rect")
 				.attr("class", "bar")
-				.attr("x", function(d) { return x(d.NM); })
-				.attr("y", function(d) { return y(parseInt(d.CNT)); })
-				.attr("height", function(d) { return height - y(parseInt(d.CNT)); })
-				.attr("width", x.rangeBand());
+				.attr("y", function(d) { return x(d.NM); })
+				.attr("x", function(d) { return 0; })
+				.attr("width", function(d) { return y(parseInt(d.CNT)); })
+				.attr("height", x.rangeBand());
 			
 			}
 			
