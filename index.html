@@ -235,12 +235,17 @@ function init(data, viewWidth, viewHeight) {
 			
 			y.domain([0, d3.max(data, function(d) { return parseInt(d.CNT); })]);
 			
+			var title = "Total Count by Name";
+			
+			console.log();
+			console.log();
+			
 			chart.append("text")
-				.attr("width", width)
 				.attr("height", 30)
 				.attr("font-size", "17px")
 				.attr("fill", "white")
-				.text("Total Count by Name");
+				.attr("dx", (width/2) - ((10*title.length)/2))
+				.text(title);
 				
 			chart.append("g")
 				.attr("class", "x axis")
