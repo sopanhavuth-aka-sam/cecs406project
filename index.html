@@ -62,7 +62,7 @@
 		position:absolute;
 			top:0px;
 			right:0;
-			width:25%;
+			width:0%;
 			height:100%;
 			background-color: black;
 			transition: width 500ms ease;
@@ -195,7 +195,9 @@ function reset() {
 function init(data, viewWidth, viewHeight) {
 			
 			var NAMES = [];
-					
+		
+			
+		function updateChart(nms) {
 			var compareBox = d3.select("#compare").node().getBoundingClientRect();
 			
 			console.log(compareBox);
@@ -219,9 +221,6 @@ function init(data, viewWidth, viewHeight) {
 				.orient("bottom")
 				.tickValues([0, d3.max(data, function(d) { return parseInt(d.CNT); })])
 				.tickFormat(function(d) { if (d == 0) return "min"; else return "max" }); 
-		
-			
-		function updateChart(nms) {
 
 			d3.select(".chart").remove();
 					
