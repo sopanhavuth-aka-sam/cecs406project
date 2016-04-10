@@ -174,17 +174,17 @@
 	<div>
 		<p class="plabel">Group By:</p>
 		<select id="groupSelect">
-			<option value="none">None</option>		
-			<option value="gender">Gender</option>
-			<option value="ethnicity">Ethnicity</option>
+			<option value="NONE">None</option>		
+			<option value="GNDR">Gender</option>
+			<option value="ETHCTY">Ethnicity</option>
 		</select>
 		</div>
 	<div>
 		<p class="plabel">Color By:</p>
 		<select id="colorSelect">
-			<option value="none">None</option>		
-			<option value="gender">Gender</option>
-			<option value="ethnicity">Ethnicity</option>
+			<option value="NONE">None</option>		
+			<option value="GNDR">Gender</option>
+			<option value="ETHCTY">Ethnicity</option>
 		</select>
 	</div>
 	<div id="rangeDiv">
@@ -285,9 +285,6 @@ function init(data, viewWidth, viewHeight, cpf) {
 			
 			var title = "Total Count by Name";
 			
-			console.log();
-			console.log();
-			
 			chart.append("text")
 				.attr("height", 30)
 				.attr("font-size", "17px")
@@ -355,16 +352,9 @@ function init(data, viewWidth, viewHeight, cpf) {
 			
 	var spiralEnter = drawSpiral(data, spiralSVG, spiralRect.width, spiralRect.height, scale);
 	
-	$(".btn").click(function() {
-	switch(this.id) {
-		case "all":
-		case "GNDR":
-		case "ETHCTY":
-			draw(this.id, data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
-			break;
-		default:
-			console.log("DEFAULT!");
-		}
+
+	$("#groupSelect").on("change", function() {
+		draw($(this).val(), data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	});
 
 	$("#scopeRange").on("change", function() {
@@ -376,9 +366,9 @@ function init(data, viewWidth, viewHeight, cpf) {
 	});
 
 	$("#spimg").mouseleave(function() {
-			draw("all", data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
+			draw("NONE", data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	});	
-	draw('all', data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
+	draw('NONE', data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	
 	/*
 	 * Begin Functions
@@ -401,7 +391,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 				if (currentScreenCapacity++ < totalScreenCapacity) {
 			
 					// adding new properties
-					d.all = "ALL";
+					d.NONE = "NONE";
 					d.x = Math.random() * viewWidth;
 					d.y = Math.random() * viewHeight;
 				
@@ -889,11 +879,11 @@ function init(data, viewWidth, viewHeight, cpf) {
 		gravitySVG.selectAll(".label")
 			.data(centers).enter().append("text")
 			.attr("class", "label")
-			.text(function (d) { console.log(d.name); if (d.name != "ALL") return d.name; else return ""; })
+			.text(function (d) { console.log(d.name); if (d.name != "NONE") return d.name; else return ""; })
 			.attr("fill", "black")
 			.style("font-size", 30 / scale)
 			.attr("transform", function (d) {
-				if (d.name == "ALL") return "";
+				if (d.name == "NONE") return "";
 				else return "translate(" + (d.x - ((d.name.length)*3)) + ", " + (d.y - d.r + (50 / scale)) + ")";
 			});
 	}
