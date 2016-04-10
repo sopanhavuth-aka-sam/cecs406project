@@ -200,7 +200,7 @@ function init(data, viewWidth, viewHeight) {
 			
 			console.log(compareBox);
 					
-			var margin = { top: 20, right: 20, bottom: 30, left: 70},
+			var margin = { top: 40, right: 20, bottom: 30, left: 70},
 			width = compareBox.width - margin.left - margin.right,
 			height = (	compareBox.height*0.50) - margin.top - margin.bottom;
 			
@@ -235,6 +235,13 @@ function init(data, viewWidth, viewHeight) {
 			
 			y.domain([0, d3.max(data, function(d) { return parseInt(d.CNT); })]);
 			
+			chart.append("text")
+				.attr("width", width)
+				.attr("height", 30)
+				.attr("font-size", "17px")
+				.attr("fill", "white")
+				.text("Total Count by Name");
+				
 			chart.append("g")
 				.attr("class", "x axis")
 				.call(xAxis);
