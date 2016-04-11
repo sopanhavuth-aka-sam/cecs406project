@@ -182,9 +182,9 @@
 	<div>
 		<p class="plabel">Color By:</p>
 		<select id="colorSelect">
-			<option value="NONE">None</option>		
-			<option value="GNDR">Gender</option>
-			<option value="ETHCTY">Ethnicity</option>
+			<option value="0">None</option>		
+			<option value="1">Gender</option>
+			<option value="2">Ethnicity</option>
 		</select>
 	</div>
 	<div id="rangeDiv">
@@ -217,8 +217,8 @@ var MAX_RADIUS_FACTOR = 0.00006;
 var STANDARD_FONT_SIZE = 9;
 var FILLS = [
 	['#827d92'],
-	['#827d92','#827354','#523536','#72856a'],
-	['#86AFF2','#EE8482'] // female, male
+	['#86AFF2','#EE8482'], // female, male
+	['#827d92','#827354','#523536','#72856a']
 ];
 
 var redraw = function(cpf) { 
@@ -323,6 +323,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 			 
 			 
 	// hacking
+	var fill = d3.scale.ordinal().range(FILLS[0]);	
 	var scaleSVG = d3.select('#content').append("svg");
 	var scale = scaleSVG[0][0].currentScale;
 	scaleSVG.remove();
@@ -357,6 +358,14 @@ function init(data, viewWidth, viewHeight, cpf) {
 		draw($(this).val(), data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	});
 
+	var colorVal = 0;
+	$("#colorSelect").on("change", function() {
+		colorVal = parseInt($(this).val());
+		fill = d3.scale.ordinal().range(FILLS[colorVal]);	
+		gravityEnter.selectAll("circle").style("fill", function (d) { return filler(d, colorVal, fill);  });
+	});
+	
+	
 	$("#scopeRange").on("change", function() {
  		redraw(($(this).val()));
 	});
@@ -424,10 +433,11 @@ function init(data, viewWidth, viewHeight, cpf) {
 		}
 		
 	function filler(d, fidx, fill) {
-		switch (fidx) {
+		console.log(fidx);
+		switch (parseInt(fidx)) {
 			case 0: return fill(0);
-			case 1: return fill(d.ETHCTY);
-			case 2: return fill(d.GNDR);
+			case 1: return fill(d.GNDR);
+			case 2: return fill(d.ETHCTY);
 			default: console.log("ERROR");
 		}
 	}
@@ -448,7 +458,6 @@ function init(data, viewWidth, viewHeight, cpf) {
 
 		var innerG = gravityEnter.append("g");
 				
-		var fill = d3.scale.ordinal().range(FILLS[fidx]);	
 		var circles = innerG.append("circle")
 			.attr("class", "node")
 			.attr("r", 2)
@@ -865,7 +874,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 				o.x += (f.x - o.x) * e.alpha;
 			}
 			
-			gravityEnter.each(collide(COLLISION_FACTOR, data))
+		   gravityEnter.each(collide(COLLISION_FACTOR, data))
 				.attr("transform", function (d) { return "translate(" + d.x + ", " + d.y + ")"; });
 		}
 	};
