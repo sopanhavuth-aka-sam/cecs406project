@@ -1,6 +1,10 @@
+package cecs406project;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
+@XmlType( propOrder = { "brth_yr", "gndr", "ethcty", "nm", "cnt", "rnk" } )
 @XmlRootElement(name="row")
 public class Row {
 	private String brth_yr;
