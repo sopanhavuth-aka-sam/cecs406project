@@ -8,32 +8,53 @@
 			#svg-piechart {
 				height: 360px;
 				margin: 0 auto;                                              
-				position: relative;
+				position: fixed;
 				width: 360px;
+				padding-left: 50px;
+			}
+			label{
+				display: inline-block;
+				padding-top: 5px;
+				padding-bottom: 5px;
+				padding-left: 5px;
+				padding-right: 8px;
+			}
+			.axis path,
+			.axis line {
+			   fill: none;
+			   stroke: #000;
+			   shape-rendering: crispEdges;
 			}
 		</style>
 	</head>
 		<body>
 		
-			<div id="demo">
+			<div id="chart", style="display:block">
 				<div id="userInput">
 					<button id="top10Button">Top 10</button>
-					<button id="top10Button">Top 50</button>
-					<button id="top10Button">Top 100</button>
+					<button id="top20Button">Top 20</button>
+					<button id="top30Button">Top 30</button>
+					<button id="top40Button">Top 40</button>
 					<br>
-					<label><input type="checkbox" id="hispanicCheckBox" >Hispanic</label>
-					<label><input type="checkbox" id="asianCheckBox" >Asian</label>
-					<label><input type="checkbox" id="blackCheckBox" >Black</label>
-					<label><input type="checkbox" id="whiteCheckBox" >White</label>
+					<br>
+					<label style="background-color: #1f77b4"><input type="checkbox" id="hispanicCheckBox" >Hispanic</label>
+					<label style="background-color: #ff7f0e"><input type="checkbox" id="asianCheckBox" >Asian</label>
+					<label style="background-color: #2ca02c"><input type="checkbox" id="blackCheckBox" >Black</label>
+					<label style="background-color: #d62728"><input type="checkbox" id="whiteCheckBox" >White</label>
 				</div>
 				<svg id="svg-barchart"></svg>
 				<svg id="svg-piechart"></svg>
 			</div>
 			
 			<script>
+				//clear checkbox input
+				document.getElementById("hispanicCheckBox").checked = false;
+				document.getElementById("asianCheckBox").checked = false;
+				document.getElementById("blackCheckBox").checked = false;
+				document.getElementById("whiteCheckBox").checked = false;
+				//store selected names
 				var selectedNames = [];
-				//variables to store 2 top ten name
-				//(20 total = top 10 males and top 10 female) in each race
+				//variables to store 2 top N (10, 20, 30) name
 				var topHispanic = [];
 				var topAsian = [];
 				var topBlack = [];
@@ -47,17 +68,19 @@
 						d.CNT = +d.CNT;
 						d.RNK = +d.RNK;
 						d.enabled = true;
-
-						if("HISPANIC".localeCompare(d.ETHCTY) == 0 && d.RNK <= 10) {
+						
+						var maxRank = 40;
+						
+						if("HISPANIC".localeCompare(d.ETHCTY) == 0 && d.RNK <= maxRank) {
 							topHispanic.push(d);
 						}
-						else if("ASIAN AND PACIFIC ISLANDER".localeCompare(d.ETHCTY) == 0 && d.RNK <= 10) {
+						else if("ASIAN AND PACIFIC ISLANDER".localeCompare(d.ETHCTY) == 0 && d.RNK <= maxRank) {
 							topAsian.push(d);
 						} 
-						else if("BLACK NON HISPANIC".localeCompare(d.ETHCTY) == 0 && d.RNK <= 10) {
+						else if("BLACK NON HISPANIC".localeCompare(d.ETHCTY) == 0 && d.RNK <= maxRank) {
 							topBlack.push(d);
 						} 
-						else if("WHITE NON HISPANIC".localeCompare(d.ETHCTY) == 0 && d.RNK <= 10) {
+						else if("WHITE NON HISPANIC".localeCompare(d.ETHCTY) == 0 && d.RNK <= maxRank) {
 							topWhite.push(d);
 						}
 					});//end: type conversion; search for top name
@@ -66,7 +89,6 @@
 				//////////////////////////////////guideline for script seperation later on/////////////////////////////////////////////////////
 				//combine 'top' arrys based on what option is checked in userInput
 				function combineRace() {
-				console.log("hello1");
 					var selectedNames = [];
 					if(document.getElementById("hispanicCheckBox").checked) {
 						selectedNames = selectedNames.concat(topHispanic);
@@ -83,18 +105,75 @@
 					return selectedNames;
 				}//end: combineRace
 				
-				//update "selectedNames" array when button is clicked.
+				//Top 10 Button: update and draw "selectedNames" array when button is clicked.
 				document.getElementById('top10Button').onclick = function() {
+					//get names array base on user's seleted race
 					selectedNames = combineRace();
-					//TEST: sort selectedNames
+					//sort names array base on CNT(count)
 					selectedNames.sort(function(a,b) {
 								return parseInt(b.CNT, 10) - parseInt(a.CNT, 10); 
 							});
-					console.log(selectedNames);
+					console.log(selectedNames);//FOR DEBUGGING
+					//Filter top 10 within names array
 					selectedNames = topN(selectedNames, 10);
-					console.log(selectedNames);
+					console.log(selectedNames);//FOR DEBUGGING
+					//draw barchart
 					bars(selectedNames);
-					////////DEBUGGING: PIECHART///////////////////////
+					//draw piechart
+					pie(pieData(selectedNames));
+				};
+				
+				//Top 20 Button: update and draw "selectedNames" array when button is clicked.
+				document.getElementById('top20Button').onclick = function() {
+					//get names array base on user's seleted race
+					selectedNames = combineRace();
+					//sort names array base on CNT(count)
+					selectedNames.sort(function(a,b) {
+								return parseInt(b.CNT, 10) - parseInt(a.CNT, 10); 
+							});
+					console.log(selectedNames);//FOR DEBUGGING
+					//Filter top 10 within names array
+					selectedNames = topN(selectedNames, 20);
+					console.log(selectedNames);//FOR DEBUGGING
+					//draw barchart
+					bars(selectedNames);
+					//draw piechart
+					pie(pieData(selectedNames));
+				};
+				
+				//Top 30 Button: update and draw "selectedNames" array when button is clicked.
+				document.getElementById('top30Button').onclick = function() {
+					//get names array base on user's seleted race
+					selectedNames = combineRace();
+					//sort names array base on CNT(count)
+					selectedNames.sort(function(a,b) {
+								return parseInt(b.CNT, 10) - parseInt(a.CNT, 10); 
+							});
+					console.log(selectedNames);//FOR DEBUGGING
+					//Filter top 10 within names array
+					selectedNames = topN(selectedNames, 30);
+					console.log(selectedNames);//FOR DEBUGGING
+					//draw barchart
+					bars(selectedNames);
+					//draw piechart
+					pie(pieData(selectedNames));
+				};
+				
+				//Top 40 Button: update and draw "selectedNames" array when button is clicked.
+				document.getElementById('top40Button').onclick = function() {
+					//get names array base on user's seleted race
+					selectedNames = combineRace();
+					//sort names array base on CNT(count)
+					selectedNames.sort(function(a,b) {
+								return parseInt(b.CNT, 10) - parseInt(a.CNT, 10); 
+							});
+					console.log(selectedNames);//FOR DEBUGGING
+					//Filter top 10 within names array
+					selectedNames = topN(selectedNames, 40);
+					console.log(selectedNames);//FOR DEBUGGING
+					//draw barchart
+					bars(selectedNames);
+					//draw piechart
 					pie(pieData(selectedNames));
 				};
 				
@@ -136,13 +215,13 @@
 				
 				function bars(data) {
 					
-					var w = 500;
-					var h = 400;
-					
+					var w = 600;
+					var h = 500;
+					var padding = 100;
 					//setup the svg
 					var svg = d3.select("#svg-barchart")
-						.attr("width", w+100)
-						.attr("height", h+100);
+						.attr("width", w+padding)
+						.attr("height", h+padding);
 						
 					svg.append("svg:rect")
 						.attr("width", "100%")
@@ -172,16 +251,22 @@
 						.domain(d3.range(data.length))
 						.rangeBands([0, h], .2);
 
-
+					//set up axis
+					var xAxis = d3.svg.axis()
+									.scale(x)
+									.orient("bottom");
+					
+					//draw axis				
+					d3.select("#barchart")
+						.append("g")
+						.attr("class", "x axis")
+						.attr("transform", "translate(0," + h + ")")
+						.call(xAxis);
+						
 					var vis = d3.select("#barchart");
 					
 					var bars = vis.selectAll("rect.bar")
 						.data(data);
-
-					//update
-//					bars
-//						.attr("fill", "#0a0")
-//						.attr("stroke", "#050");
 
 					//enter
 					bars.enter()
@@ -204,6 +289,7 @@
 						.transition()
 						.duration(300)
 						.ease("quad")
+//						.attr("x", function(d) { return x(d.CNT); })
 						.attr("width", function(d) { return x(d.CNT); })
 						.attr("height", y.rangeBand())
 						.attr("transform", function(d,i) {
@@ -212,29 +298,16 @@
 						.attr("fill", function(d){
 							return ethnicityColor(d.ETHCTY);
 						});
-						//new code for text
-//					var label = vis.selectAll("g")
-//									.data(data)
-//									.enter().append("g")
-//									.attr("transform", function(d, i) { 
-//										return "translate(" + [0, y(i)] + ")"
-//									});
-//									
-//					var labels = label.append("text")
-//						.attr("x", function(d) { return x(d.CNT) + 3; })
-//						.attr("y", y.rangeBand()/2)
-//						.attr("dy", ".35em")
-//						.text(function(d) { 
-//							return d.NM + " " + d.CNT; 
-//						});
-
+					
+					//remove all previous text
+					var removeLable = d3.selectAll("text").remove();
+					
 					//var labels = vis.selectAll("g")
 					var labels = vis.selectAll("text")
 									.data(data);
 									
 					//enter
 					labels.enter()
-						//.append("g")
 						.append("text")
 						.attr("transform", function(d, i) { 
 							return "translate(" + [0, y(i)] + ")"
@@ -244,16 +317,16 @@
 					labels.exit().remove();
 					
 					//draw new labels
-					labels//.append("text")
-//						.attr("transform", function(d, i) { 
-//								return "translate(" + [0, y(i)] + ")"
-//						})
+					labels
 						.attr("x", function(d) { return x(d.CNT) + 3; })
 						.attr("y", y.rangeBand()/2)
 						.attr("dy", ".35em")
+						.attr("font-size", 15)
 						.text(function(d) { 
 							return d.NM + " " + d.CNT; 
 						});
+					
+					//testing tooltip
 					
 					
 					//color() function: assign color to bar base on ethnicity
@@ -327,18 +400,6 @@
 						.value(function(d) { return d.count; })
 						.sort(null);
 					  
-//					var tooltip = d3.select('#svg-piechart')
-//					  .append('div')
-//					  .attr('class', 'tooltip');
-//					
-//					tooltip.append('div')
-//					  .attr('class', 'label');
-//
-//					tooltip.append('div')
-//					  .attr('class', 'count');
-//
-//					tooltip.append('div')
-//					  .attr('class', 'percent');
 					var tooltip = d3.select("body")
 									.append("div")
 									.style("position", "absolute")
@@ -357,8 +418,7 @@
 						.attr('d', arc)
 						.attr('fill', function(d, i) { 
 						  return color(d.data.label); 
-						})            
-                        .attr("stroke", "#050")                   
+						})                             
 						.each(function(d) { this._current = d; });   
 					
 					//exit
