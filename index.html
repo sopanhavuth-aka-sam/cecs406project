@@ -1024,6 +1024,11 @@ function init(data, viewWidth, viewHeight, cpf) {
 	var hq = [];
 	
 	$("#drew").on("click", function() {
+	
+			$("#drew").hide();
+			$("#sam").show();
+			$("#arun").show();
+			
 		$(".expCtrl").each(function() {
 			$(this).children().each(function() {
 			$(this).show();
@@ -1055,6 +1060,8 @@ function init(data, viewWidth, viewHeight, cpf) {
 			
 			$("#sam").hide();
 			$("#drew").show();
+			$("#arun").show();
+			
 			
 			var lgnd = $("#legend");
 			
@@ -1080,9 +1087,16 @@ function init(data, viewWidth, viewHeight, cpf) {
 
 			$("#content").hide();
 			$("#chart").show();
+			$("#Top20Rank").hide();
 	});		
 	
 	$("#arun").on("click", function() {
+	
+			$("#arun").hide();
+			$("#sam").show();
+			$("#drew").show();
+
+			$("#chart").hide();			
 			$("#content").hide();
 			$("#Top20Rank").show();
 	});		
