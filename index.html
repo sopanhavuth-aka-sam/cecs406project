@@ -11,12 +11,10 @@
 		 
 		 #Top20Rank {
 		 	display:none;
+		 	width:100%;
 		 }
 		 
 		 
-		 svg {
-			font: 12px sans-serif;
-		}
 		text {
 			pointer-events: none;
 		}
@@ -300,9 +298,9 @@
 	</div>
 	<div id="bttnDiv">
 		<p>View:</p>
+		<button id="drew">Explore</button>
 		<button id="sam">Analyze</button>
 		<button id="arun">Rank</button>
-		<button id="drew">Explore</button>
 	</div>
 </div>
 <div id="chart">
@@ -412,7 +410,7 @@
 					.domain([1, 97])
 					.range([colors.length-1, 0])
 					.clamp(true);
-			var diameter = 940;
+			var diameter = Math.min(window.innerWidth, window.innerHeight);
 			var rect_width = 30;
 			var rect_height = 14;
 			var link_width = "1px";
@@ -462,6 +460,8 @@
 			var svg = d3.select("#Top20Rank").append("svg")
 					.attr("width", diameter)
 					.attr("height", diameter)
+					.style("position", "absolute")
+					.style("left", ((window.innerWidth/2)-(diameter/2))) 
 					.append("g")
 					.attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
 			// links
@@ -1023,6 +1023,13 @@ function init(data, viewWidth, viewHeight, cpf) {
 
 	var hq = [];
 	
+	function showAfterTimeout(e) {
+		setTimeout(function() {
+					e.show();
+		},  300);
+	}
+	
+	
 	$("#drew").on("click", function() {
 	
 			$("#drew").hide();
@@ -1031,7 +1038,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 			
 		$(".expCtrl").each(function() {
 			$(this).children().each(function() {
-			$(this).show();
+				showAfterTimeout($(this));
 			});
 		
 			$(this).height(hq.shift());
@@ -1070,8 +1077,10 @@ function init(data, viewWidth, viewHeight, cpf) {
 					$(this).hide();
 				});
 				
-				hq.push($(this).height());
-				$(this).height(0);
+				if ($(this).height() != 0) {
+					hq.push($(this).height());
+					$(this).height(0);
+				}
 			});
 			
 			$(".fades").each(function() {
@@ -1096,6 +1105,21 @@ function init(data, viewWidth, viewHeight, cpf) {
 			$("#sam").show();
 			$("#drew").show();
 
+			$(".expCtrl").each(function() {
+				$(this).children().each(function() {
+					$(this).hide();
+				});
+				
+				if ($(this).height() != 0) {
+					hq.push($(this).height());
+					$(this).height(0);
+				}
+			});
+			
+			$(".fades").each(function() {
+				$(this).css("opacity", 0);
+			});
+			
 			$("#chart").hide();			
 			$("#content").hide();
 			$("#Top20Rank").show();
