@@ -1079,25 +1079,17 @@ function init(data, viewWidth, viewHeight, cpf) {
 	function drawGravity(data, svg, fidx) {
 		
 		var nodes = svg.selectAll("g").data(data);
-	
+		
 		nodes.exit().remove();
 		
 		var gravityEnter = nodes.enter().append("g");
 		
-		var drag = d3.behavior.drag()
-			.on("dragstart", dragstarted)
-			.on("drag", dragged)
-			.on("dragend", dragended);
-
 		var innerG = gravityEnter.append("g");
 				
 		var circles = innerG.append("circle")
 			.attr("class", "node")
 			.attr("r", 2)
 			.style("fill", function (d) { return filler(d, fidx, fill);  });
-				
-		circles.transition().duration(333)
-			.attr("r", function(d) { return d.radius; })
 		
 		innerG.append("text")
 			.attr("dx", parseInt(-25*scale))
@@ -1105,6 +1097,14 @@ function init(data, viewWidth, viewHeight, cpf) {
 			.attr("font-size", parseInt(STANDARD_FONT_SIZE * (1/(scale))))
 			.text(function(d) { return d.NM; });
 		
+		circles.transition().duration(333)
+			.attr("r", function(d) { return d.radius; })
+			
+		var drag = d3.behavior.drag()
+			.on("dragstart", dragstarted)
+			.on("drag", dragged)
+			.on("dragend", dragended);
+			
 		innerG.call(drag);
 		
 		return gravityEnter;
@@ -1504,7 +1504,6 @@ function init(data, viewWidth, viewHeight, cpf) {
 			var ymag = parseFloat(circle.absY) - other.absY;
 			var distance = Math.sqrt(Math.pow(xmag, 2) + Math.pow(ymag, 2));		
 			if (distance <= (parseFloat(circle.radius) + other.radius)) {
-							// debugger;
 				if (ymag != 0.0) {
 					var theta = Math.atan(xmag/ymag);
 					dx = circle.dx = speed * INELASTIC_COEFFICIENT * Math.sin(theta) * -1.0;
