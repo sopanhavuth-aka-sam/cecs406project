@@ -333,8 +333,8 @@
 <script src="node_modules/underscore/underscore.js"></script>
 <script>
 
-var MALE_COLOR = '#EE8482';
-var FEMALE_COLOR = '#86AFF2';
+var FEMALE_COLOR = '#EE8482';
+var MALE_COLOR = '#86AFF2';
 var ASIAN_COLOR = '#00A368';
 var BLACK_COLOR = '#FFD300';
 var HISPANIC_COLOR = '#0088BF';
@@ -1045,6 +1045,15 @@ function init(data, viewWidth, viewHeight, cpf) {
 			$("#sam").show();
 			$("#arun").show();
 			
+			for (var i = 0; i < DROPPED_ELEMENTS.length; i++) {
+				var c = DROPPED_ELEMENTS[i];
+				var t = c.sibling;
+				
+				d3.select(c).attr("transform", "translate(0,0)");
+				d3.select(t).attr("transform", "translate(0,0)");
+				
+			}
+			
 		$(".expCtrl").each(function() {
 			$(this).children().each(function() {
 				showAfterTimeout($(this));
@@ -1061,6 +1070,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 		lgnd.css("left", 40);			
 		lgnd.css("top", 40);
 			
+		$("#compare").width(0);
 		$("#chart").hide();
 		$("#Top20Rank").hide();
 		
@@ -1103,6 +1113,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 			lgnd.css("left", w);			
 			lgnd.css("top", h);
 
+			$("#compare").width(0);
 			$("#content").hide();
 			$("#chart").show();
 			$("#Top20Rank").hide();
@@ -1129,6 +1140,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 				$(this).css("opacity", 0);
 			});
 			
+			$("#compare").width(0);
 			$("#chart").hide();			
 			$("#content").hide();
 			$("#Top20Rank").show();
@@ -1547,6 +1559,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 			if (atRest(circle, env)) break;			
 		}
 		
+		circle.sibling = text;
 		DROPPED_ELEMENTS.push(circle);
 	}
 	
