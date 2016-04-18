@@ -75,25 +75,33 @@
 			text-align:center;
 			height:50px;
 		}
-		#sam, #arun {
+		#sam, #arun, #drew {
 			display:inline-block;
 			width:80px;
 			margin:0 auto;
 		}
 		
+		#drew {
+			display:none;
+		}
+		
 		#legend {
 			position:absolute;
 			top:40px;
-			left:20px;
+			left:40px;
 			width:200px;
 			z-index:99999;
 			border:1px solid black;
-			transition: all 1s linear;
+			transition: all 750ms linear;
 		}
 		
 		.expCtrl {
 		height: 50px;
-			transition: height 1s linear;
+			transition: height 750ms linear;
+		}
+		
+		.squeeze {
+			height: 0;
 		}
 		
 		#spimg {
@@ -292,8 +300,9 @@
 	</div>
 	<div id="bttnDiv">
 		<p>View:</p>
-		<button id="sam">Analysis</button>
-		<button id="arun">Top 20</button>
+		<button id="sam">Analyze</button>
+		<button id="arun">Rank</button>
+		<button id="drew">Explore</button>
 	</div>
 </div>
 <div id="chart">
@@ -1010,25 +1019,61 @@ function init(data, viewWidth, viewHeight, cpf) {
 			draw("NONE", data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	});	
 	
+	
 
+	var hq = [];
+	
+	$("#drew").on("click", function() {
+		$(".expCtrl").each(function() {
+			$(this).children().each(function() {
+			$(this).show();
+			});
+		
+			$(this).height(hq.shift());
+		});
+		
+		$(".fades").each(function() {
+			$(this).css("opacity", 1);
+		});
+		
+		var lgnd = $("#legend");
+		lgnd.css("left", 40);			
+		lgnd.css("top", 40);
+			
+		$("#chart").hide();
+		$("#Top20Rank").hide();
+		
+		var cs = gravityEnter.selectAll("circle");
+		cs.style("opacity", 0);
+		setTimeout(function() {
+			$("#content").show();
+			cs.transition().duration(1000).style("opacity", 1);
+		}, 500);
+	});
+	
 	$("#sam").on("click", function() {
 			
+			$("#sam").hide();
+			$("#drew").show();
+			
 			var lgnd = $("#legend");
-
-			var w = window.innerWidth - lgnd.width();
-			var h = window.innerHeight - lgnd.height();
 			
 			$(".expCtrl").each(function() {
 				$(this).children().each(function() {
 					$(this).hide();
 				});
 				
+				hq.push($(this).height());
 				$(this).height(0);
 			});
 			
 			$(".fades").each(function() {
 				$(this).css("opacity", 0);
 			});
+			
+			
+			var w = window.innerWidth - (lgnd.width() + 40);
+			var h = window.innerHeight - ($("#bttnDiv").height()  + 80); 
 			
 			lgnd.css("left", w);			
 			lgnd.css("top", h);
