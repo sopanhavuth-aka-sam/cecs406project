@@ -90,12 +90,12 @@
 			width:200px;
 			z-index:99999;
 			border:1px solid black;
-			transition: all 750ms linear;
+			transition: all 500ms linear;
 		}
 		
 		.expCtrl {
 		height: 50px;
-			transition: height 750ms linear;
+			transition: height 500ms linear;
 		}
 		
 		.squeeze {
@@ -125,7 +125,7 @@
 		
 		.fades {
 			opacity:1;
-			transition:opacity 500ms linear;
+			transition:opacity 250ms linear;
 		}
 		
 	
@@ -1035,7 +1035,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 	function showAfterTimeout(e) {
 		setTimeout(function() {
 					e.show();
-		},  300);
+		},  200);
 	}
 	
 	
@@ -1083,7 +1083,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 		setTimeout(function() {
 			$("#content").show();
 			cs.transition().duration(1000).style("opacity", 1);
-		}, 500);
+		}, 200);
 	});
 	
 	$("#sam").on("click", function() {
