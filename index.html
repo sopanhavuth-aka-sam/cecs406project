@@ -71,8 +71,9 @@
 		 
 		#bttnDiv {
 			width:90%;
-			margin:30px auto;
+			margin:20px auto;
 			text-align:center;
+			height:50px;
 		}
 		#sam, #arun {
 			display:inline-block;
@@ -89,6 +90,38 @@
 			border:1px solid black;
 			transition: all 1s linear;
 		}
+		
+		.expCtrl {
+		height: 50px;
+			transition: height 1s linear;
+		}
+		
+		#spimg {
+			width: 60px;
+			display:block;
+			margin: 20px auto;
+		}
+		
+		#rangeDiv {
+			width:80%;
+			margin:auto;
+			text-align:center;
+			height:60px;
+		}
+		
+		#sortDiv {	
+			width:80%;
+			margin:auto;
+			text-align:center;
+			height:100px;
+		}
+		
+		
+		.fades {
+			opacity:1;
+			transition:opacity 500ms linear;
+		}
+		
 	
 		.plabel {
 			width:45%;
@@ -97,18 +130,9 @@
 			display:inline-block;
 		}
 	
-		#rangeDiv, #sortDiv {
-			width:80%;
-			margin:auto;
-			text-align:center;
-		}
 		
 		
-		#spimg {
-			width: 60px;
-			display:block;
-			margin: 20px auto;
-		}
+
 	
 		.axis text {
 			font: 10px sans-serif;
@@ -242,29 +266,29 @@
 	</head>
 <body>
 <div id="legend">
-	<div>
-		<p class="plabel">Group By:</p>
-		<select id="groupSelect">
+	<div class="expCtrl">
+		<p class="plabel fades">Group By:</p>
+		<select id="groupSelect" class="fades">
 			<option value="NONE">None</option>		
 			<option value="GNDR">Gender</option>
 			<option value="ETHCTY">Ethnicity</option>
 		</select>
-		</div>
-	<div>
-		<p class="plabel">Color By:</p>
-		<select id="colorSelect">
+	</div>
+	<div class="expCtrl">
+		<p class="plabel fades">Color By:</p>
+		<select id="colorSelect" class="fades">
 			<option value="0">None</option>		
 			<option value="1">Gender</option>
 			<option value="2">Ethnicity</option>
 		</select>
 	</div>
-	<div id="rangeDiv">
-		<p>Scope:</p>
-		<input id="scopeRange" value="7.5" type="range" min="1.0" max="15.0" step="1.0">
+	<div id="rangeDiv" class="expCtrl">
+		<p class="fades">Scope:</p>
+		<input id="scopeRange" class="fades" value="7.5" type="range" min="1.0" max="15.0" step="1.0">
 	</div>
-	<div id="sortDiv">
-		<p>Sort:</p>
-		<img id="spimg" src="spiral.png">
+	<div id="sortDiv" class="expCtrl">
+		<p class="fades">Sort:</p>
+		<img id="spimg" class="fades" src="spiral.png">
 	</div>
 	<div id="bttnDiv">
 		<p>View:</p>
@@ -994,7 +1018,17 @@ function init(data, viewWidth, viewHeight, cpf) {
 			var w = window.innerWidth - lgnd.width();
 			var h = window.innerHeight - lgnd.height();
 			
-			console.log(w + "," + h);
+			$(".expCtrl").each(function() {
+				$(this).children().each(function() {
+					$(this).hide();
+				});
+				
+				$(this).height(0);
+			});
+			
+			$(".fades").each(function() {
+				$(this).css("opacity", 0);
+			});
 			
 			lgnd.css("left", w);			
 			lgnd.css("top", h);
