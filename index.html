@@ -972,9 +972,11 @@ function reset() {
 }
 	
 	
-		$("#scopeRange").on("change", function() {
- 		redraw(($(this).val()));
-	});
+$("#scopeRange").on("change", function() {
+	redraw(($(this).val()));
+});
+
+
 function init(data, viewWidth, viewHeight, cpf) {
 			
 	var CIRCLE_PADDING_FACTOR = cpf;			
@@ -1366,7 +1368,6 @@ function init(data, viewWidth, viewHeight, cpf) {
 		var spiralLength = spiralEnter.node().getTotalLength();
 		var spiralPadding = spiralLength / list.length;
 		for (var i = 0; i < list.length; i++) {
-			console.log(list[i].__data__.CNT);
 			
 			var spiralPoint = spiralEnter.node().getPointAtLength(i * spiralPadding);
 			var g = list[i];
@@ -1383,9 +1384,16 @@ function init(data, viewWidth, viewHeight, cpf) {
 			var gidx = x2 - trans.x;
 			var gidy = y2 - trans.y;
 		
- 			gi.style.transform = "translate(" + gidx + "px," + gidy + "px)";
+			rel(gi, i, gidx, gidy);
 		}
 	}
+	
+	function rel(gi, i, gidx, gidy) {
+		setTimeout(function() {
+			gi.style.transform = "translate(" + gidx + "px," + gidy + "px)";
+		}, 100);
+	}
+	
 	
 	function getCurrentTranslation(g) {
 		var transform = g.getAttribute("transform");
