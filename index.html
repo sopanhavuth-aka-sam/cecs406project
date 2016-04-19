@@ -333,8 +333,8 @@
 <script src="node_modules/underscore/underscore.js"></script>
 <script>
 
-var FEMALE_COLOR = '#EE8482';
-var MALE_COLOR = '#86AFF2';
+var FEMALE_COLOR = '#86AFF2';
+var MALE_COLOR = '#EE8482';
 var ASIAN_COLOR = '#00A368';
 var BLACK_COLOR = '#FFD300';
 var HISPANIC_COLOR = '#0088BF';
@@ -562,6 +562,7 @@ var WHITE_COLOR = '#C40233';
 				var topWhite = [];
 				//parsing and searching from output file
 				d3.csv("clean.csv", function(error, dataSet) {
+					console.log("sam");	
 					//type conversion (string to int);and search for top name
 					dataSet.forEach(function(d) {
 						d.BRTH_YR = +d.BRTH_YR;
@@ -948,6 +949,8 @@ var FILLS = [
 	[ ASIAN_COLOR, BLACK_COLOR, HISPANIC_COLOR, WHITE_COLOR ] // asian, black, hispanic, white
 ];
 
+
+
 var redraw = function(cpf) { 
 	d3.csv("clean.csv", function(error, data) {
 	
@@ -968,6 +971,10 @@ function reset() {
 	}
 }
 	
+	
+		$("#scopeRange").on("change", function() {
+ 		redraw(($(this).val()));
+	});
 function init(data, viewWidth, viewHeight, cpf) {
 			
 	var CIRCLE_PADDING_FACTOR = cpf;			
@@ -1015,10 +1022,6 @@ function init(data, viewWidth, viewHeight, cpf) {
 		gravityEnter.selectAll("circle").style("fill", function (d) { return filler(d, colorVal, fill);  });
 	});
 	
-	
-	$("#scopeRange").on("change", function() {
- 		redraw(($(this).val()));
-	});
 		
 	$("#spimg").mouseenter(function() {
 			sort(gravityEnter[0], spiralEnter);
@@ -1157,7 +1160,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 	 */
 	function preProcessData(data, viewWidth, viewHeight) {
 		
-			data = _.sortBy(data, function(node) { return parseInt(node.RNK) });
+			data = _.sortBy(data, function(node) { return parseInt(node.CNT) }).reverse();
 		
 			var minRadius = Math.ceil(viewWidth*viewHeight*MIN_RADIUS_FACTOR);	
 			var maxRadius = Math.floor(viewWidth*viewHeight*MAX_RADIUS_FACTOR);
