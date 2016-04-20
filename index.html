@@ -333,8 +333,8 @@
 <script src="node_modules/underscore/underscore.js"></script>
 <script>
 
-var FEMALE_COLOR = '#86AFF2';
-var MALE_COLOR = '#EE8482';
+var FEMALE_COLOR = '#EE8482';
+var MALE_COLOR = '#86AFF2';
 var ASIAN_COLOR = '#00A368';
 var BLACK_COLOR = '#FFD300';
 var HISPANIC_COLOR = '#0088BF';
@@ -1017,6 +1017,9 @@ function init(data, viewWidth, viewHeight, cpf) {
 	});
 
 	var colorVal = 0;
+	colorVal = parseInt($("#colorSelect").val());	
+	gravityEnter.selectAll("circle").style("fill", function (d) { return filler(d, colorVal);  });
+
 	$("#colorSelect").on("change", function() {
 		colorVal = parseInt($(this).val());	
 		gravityEnter.selectAll("circle").style("fill", function (d) { return filler(d, colorVal);  });
@@ -1153,7 +1156,7 @@ function init(data, viewWidth, viewHeight, cpf) {
 			$("#Top20Rank").show();
 	});		
 	
-	draw('NONE', data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
+	draw($("#groupSelect").val(), data, gravityEnter[0], gravitySVG, spiralRect.width, spiralRect.height, scale);
 	
 	/*
 	 * Begin Functions
